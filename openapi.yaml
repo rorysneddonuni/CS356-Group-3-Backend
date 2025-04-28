@@ -13,6 +13,12 @@ tags:
     description: Results for given experiments
   - name: users
     description: Operations about user
+  - name: videos
+    description: Operations related to videos in the Infrastructure Portal
+  - name: encoders
+    description: Operations related to encoders in the Infrastructure Portal
+  - name: networks
+    description: Operations related to networks in the Infrastructure Portal
 paths:
   /experiments:
     get:
@@ -329,6 +335,409 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /infrastructure/videos:
+      post:
+        tags:
+          - videos
+        summary: Create video
+        description: Upload a new video to the infrastructure portal (Super User access required).
+        operationId: createVideo
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VideoInput'
+        responses:
+          '200':
+            description: Video created successfully
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Video'
+          '400':
+            description: Invalid video upload data
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '415':
+            description: Unsupported media type for video upload.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          '422':
+            description: Video file validation error.
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+
+      get:
+        tags:
+          - videos
+        summary: Retrieve videos list
+        description: Fetch a list of all available videos.
+        operationId: getVideos
+        responses:
+          '200':
+            description: A list of videos
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Video'
+          default:
+            description: Unexpected error
+            content:
+              application/json:
+                schema:
+                  $ref: "#/components/schemas/Error"
+
+  /infrastructure/videos/{id}:
+    get:
+      tags:
+        - videos
+      summary: Retrieve video
+      description: Fetch a specific video by ID.
+      operationId: getVideo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Video details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Video'
+        '404':
+          description: Video not found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags:
+        - videos
+      summary: Delete video
+      description: Delete a specific video by ID (Super User access required).
+      operationId: deleteVideo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Video deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Video'
+        '404':
+          description: Video not found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /infrastructure/encoders:
+    post:
+      tags:
+        - encoders
+      summary: Create encoder
+      description: Create a new encoder (Super User access required).
+      operationId: createEncoder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EncoderInput'
+      responses:
+        '200':
+          description: Encoder created
+        '400':
+          description: Invalid payload
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    get:
+      tags:
+        - encoders
+      summary: Retrieve encoder list
+      description: Fetch a list of all encoders.
+      operationId: getEncoders
+      responses:
+        '200':
+          description: A list of encoders
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Encoder'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /infrastructure/encoders/{id}:
+    get:
+      tags:
+        - encoders
+      summary: Retrieve encoder
+      description: Fetch a specific encoder by ID.
+      operationId: getEncoder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Encoder details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Encoder'
+        '404':
+          description: Encoder not found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    put:
+      tags:
+        - encoders
+      summary: Update encoder
+      description: Update an existing encoder (Super User access required).
+      operationId: updateEncoder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EncoderInput'
+      responses:
+        '200':
+          description: Encoder updated
+        '400':
+          description: Invalid payload
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+        '404':
+          description: Encoder not found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - encoders
+      summary: Delete encoder
+      description: Delete a specific encoder (Super User access required).
+      operationId: deleteEncoder
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Encoder deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Encoder'
+        '404':
+          description: Encoder not found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /infrastructure/networks:
+    post:
+      tags:
+        - networks
+      summary: Create network
+      description: Upload a new network (Super User access required).
+      operationId: createNetwork
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NetworkInput'
+      responses:
+        '200':
+          description: Network created
+        '400':
+          description: Invalid payload
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags:
+        - networks
+      summary: Retrieve networks list
+      description: Fetch a list of all networks.
+      operationId: getNetworks
+      responses:
+        '200':
+          description: A list of networks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Network'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /infrastructure/networks/{id}:
+    get:
+      tags:
+        - networks
+      summary: Retrieve network
+      description: Fetch a specific network by ID.
+      operationId: getNetwork
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Network details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Network'
+        '404':
+          description: Network not found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - networks
+      summary: Delete network
+      description: Delete a specific network by ID (Super User access required).
+      operationId: deleteNetwork
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Network deleted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Network'
+        '404':
+          description: Network not found
+          content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
 components:
   schemas:
     Experiment:
@@ -369,6 +778,85 @@ components:
       required:
         - code
         - message
+    Video:
+        type: object
+        properties:
+          id:
+            type: string
+          video:
+            type: string
+            format: binary
+          frameRate:
+            type: string
+          resolution:
+            type: string
+          createdDate:
+            type: string
+            format: date-time
+
+    VideoInput:
+      type: object
+      properties:
+        video:
+          type: string
+          format: binary
+        frameRate:
+          type: string
+        resolution:
+          type: string
+
+    Encoder:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        encoderType:
+          type: string
+        encoderCode:
+          type: string
+        layers:
+          type: array
+          items:
+            type: string
+            format: binary
+
+    EncoderInput:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        encoderType:
+          type: string
+        encoderCode:
+          type: string
+        layers:
+          type: array
+          items:
+            type: string
+            format: binary
+
+    Network:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        networkType:
+          type: string
+
+    NetworkInput:
+      type: object
+      properties:
+        name:
+          type: string
+        networkType:
+          type: string
+
   requestBodies:
     Experiment:
       description: Experiment object that needs to be added to the store
