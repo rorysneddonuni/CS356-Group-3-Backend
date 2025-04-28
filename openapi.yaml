@@ -11,7 +11,7 @@ tags:
     description: Management of experiments
   - name: results
     description: Results for given experiments
-  - name: users
+  - name: user
     description: Operations about user
   - name: videos
     description: Operations related to videos in the Infrastructure Portal
@@ -55,7 +55,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Experiment'
+              $ref: '#/components/schemas/ExperimentInput'
         required: true
       responses:
         '200':
@@ -117,18 +117,18 @@ paths:
           schema:
             type: string
       requestBody:
-        description: Update an existent user in the store
+        description: Update an existent experiment in the store
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/ExperimentInput'
       responses:
         '200':
           description: successful operation
         '400':
           description: bad request
         '404':
-          description: user not found
+          description: experiment not found
         default:
           description: Unexpected error
           content:
@@ -159,6 +159,50 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /experiments/{experimentId}/status:
+    get:
+      tags:
+        - experiments
+      summary: Get experiment status
+      description: Retrieve the current status and progress of an experiment.
+      operationId: getExperimentStatus
+      parameters:
+        - name: experimentId
+          in: path
+          description: Unique ID to identify the experiment.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Experiment status retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  experimentId:
+                    type: string
+                    example: "123e4567-e89b-12d3-a456-426614174000"
+                  status:
+                    type: string
+                    example: "running"
+                  progress:
+                    type: integer
+                    example: 45
+                    description: Progress percentage (0-100)
+        '404':
+          description: Experiment not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        default:
+          description: Unexpected error while retrieving experiment status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /experiments/{experimentId}/results:
     get:
       tags:
@@ -220,10 +264,10 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /users:
+  /user:
     post:
       tags:
-        - users
+        - user
       summary: Create user.
       description: This can only be done by the logged in user.
       operationId: createUser
@@ -232,7 +276,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/UserInput'
       responses:
         '200':
           description: successful operation
@@ -246,7 +290,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /users/{username}:
+  /user/{username}:
     get:
       tags:
         - user
@@ -295,7 +339,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/User'
+              $ref: '#/components/schemas/UserInput'
       responses:
         '200':
           description: successful operation
@@ -318,7 +362,7 @@ paths:
       parameters:
         - name: username
           in: path
-          description: The name that needs to be deleted
+          description: The username that needs to be deleted
           required: true
           schema:
             type: string
@@ -746,6 +790,104 @@ components:
         id:
           type: string
           format: uuid
+        experimentName:
+          type: string
+          example: "My Test Experiment"
+        description:
+          type: string
+          example: "An experiment testing video encodings."
+        videoSources:
+          type: array
+          items:
+            type: string
+            example: "video1.mp4"
+        encodingParameters:
+          type: object
+          properties:
+            codec:
+              type: string
+              example: "h264"
+            bitrate:
+              type: string
+              example: "5000kbps"
+            resolution:
+              type: string
+              example: "1920x1080"
+        networkConditions:
+          type: object
+          properties:
+            packetLoss:
+              type: string
+              example: "2%"
+            delay:
+              type: string
+              example: "50ms"
+        metricsRequested:
+          type: array
+          items:
+            type: string
+            example: "PSNR"
+        status:
+          type: string
+          example: "pending"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-04-01T10:00:00Z"
+      required:
+        - experimentName
+        - videoSources
+        - encodingParameters
+        - networkConditions
+        - metricsRequested
+
+    ExperimentInput:
+      type: object
+      required:
+        - experimentName
+        - videoSources
+        - encodingParameters
+        - networkConditions
+        - metricsRequested
+      properties:
+        experimentName:
+          type: string
+          example: "Video Encoding Test"
+        description:
+          type: string
+          example: "Experiment description text here"
+        videoSources:
+          type: array
+          items:
+            type: string
+          example: ["video1.mp4", "video2.mp4"]
+        encodingParameters:
+          type: object
+          properties:
+            codec:
+              type: string
+              example: "H.264"
+            bitrate:
+              type: string
+              example: "5000kbps"
+            resolution:
+              type: string
+              example: "1920x1080"
+        networkConditions:
+          type: object
+          properties:
+            packetLoss:
+              type: string
+              example: "1%"
+            delay:
+              type: string
+              example: "100ms"
+        metricsRequested:
+          type: array
+          items:
+            type: string
+          example: ["PSNR", "SSIM"]
+
     User:
       type: object
       properties:
@@ -768,6 +910,26 @@ components:
         password:
           type: string
           example: '12345'
+
+    UserInput:
+      type: object
+      properties:
+        username:
+          type: string
+          example: theUser
+        firstName:
+          type: string
+          example: John
+        lastName:
+          type: string
+          example: James
+        email:
+          type: string
+          example: john@email.com
+        password:
+          type: string
+          example: '12345'
+
     Error:
       type: object
       properties:
