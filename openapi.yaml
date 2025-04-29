@@ -795,7 +795,7 @@ components:
         networkConditions:
           delay: 50ms
           packetLoss: 2%
-        createdAt: 2024-04-01T10:00:00Z
+        createdAt: "2024-04-01T10:00:00Z"
         metricsRequested:
           - PSNR
           - PSNR
@@ -844,7 +844,7 @@ components:
           title: status
           type: string
         createdAt:
-          example: 2024-04-01T10:00:00Z
+          example: "2024-04-01T10:00:00Z"
           format: date-time
           title: createdAt
           type: string
@@ -995,7 +995,7 @@ components:
     Video:
       example:
         frameRate: frameRate
-        createdDate: 2000-01-23T04:56:07.000+00:00
+        createdDate: "2000-01-23T04:56:07.000+00:00"
         id: id
         video: ""
         resolution: resolution
