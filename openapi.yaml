@@ -48,10 +48,7 @@ paths:
       description: Create a new experiment under a given user.
       operationId: createExperiment
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExperimentInput'
+        $ref: '#/components/requestBodies/Experiment'
         description: Create a new experiment
         required: true
       responses:
@@ -144,11 +141,9 @@ paths:
             type: string
           style: simple
       requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExperimentInput'
+        $ref: '#/components/requestBodies/Experiment'
         description: Update an existent experiment in the store
+        required: true
       responses:
         "200":
           description: successful operation
