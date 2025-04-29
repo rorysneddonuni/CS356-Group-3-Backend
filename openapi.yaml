@@ -1,1036 +1,1189 @@
 openapi: 3.0.4
 info:
+  description: API gateway for dataservices providing data access and management for
+    IKlik services.
   title: IKlik Backend Services
-  description: |-
-    API gateway for dataservices providing data access and management for IKlik services.
   version: 1.0.0
 servers:
   - url: https://localhost:8000/api/v1
 tags:
-  - name: experiments
-    description: Management of experiments
-  - name: results
-    description: Results for given experiments
-  - name: user
-    description: Operations about user
-  - name: videos
-    description: Operations related to videos in the Infrastructure Portal
-  - name: encoders
-    description: Operations related to encoders in the Infrastructure Portal
-  - name: networks
-    description: Operations related to networks in the Infrastructure Portal
+  - description: Management of experiments
+    name: experiments
+  - description: Results for given experiments
+    name: results
+  - description: Operations about users
+    name: users
+  - description: Operations related to videos in the Infrastructure Portal
+    name: videos
+  - description: Operations related to encoders in the Infrastructure Portal
+    name: encoders
+  - description: Operations related to networks in the Infrastructure Portal
+    name: networks
 paths:
   /experiments:
     get:
-      tags:
-        - experiments
-      summary: List experiments.
       description: List experiments for a given user.
       operationId: getExperiments
       responses:
-        '200':
-          description: Successful operation
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Experiment'
-        '400':
+          description: Successful operation
+        "400":
           description: Invalid request
-        '422':
+        "422":
           description: Validation exception
         default:
-          description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-    post:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: List experiments.
       tags:
         - experiments
-      summary: Create a new experiment.
+    post:
       description: Create a new experiment under a given user.
       operationId: createExperiment
       requestBody:
-        description: Create a new experiment
         content:
           application/json:
             schema:
               $ref: '#/components/schemas/ExperimentInput'
+        description: Create a new experiment
         required: true
       responses:
-        '200':
-          description: Successful operation
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Experiment'
-        '400':
+          description: Successful operation
+        "400":
           description: Invalid input
-        '422':
+        "422":
           description: Validation exception
         default:
-          description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Create a new experiment.
+      tags:
+        - experiments
   /experiments/{experimentId}:
-    get:
-      tags:
-        - experiments
-      summary: Get experiment by ID.
-      description: Get full details of an experiment by its unique ID.
-      operationId: getExperiment
-      parameters:
-        - name: experimentId
-          in: path
-          description: ID to uniquely identify an experiment.
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Experiment'
-        '400':
-          description: Invalid status value
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-    put:
-      tags:
-        - experiments
-      summary: Update an experiment.
-      description: This can only be done by the user who owns the experiment.
-      operationId: updateExperiment
-      parameters:
-        - name: experimentId
-          in: path
-          description: ID to uniquely identify an experiment.
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: Update an existent experiment in the store
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExperimentInput'
-      responses:
-        '200':
-          description: successful operation
-        '400':
-          description: bad request
-        '404':
-          description: experiment not found
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
     delete:
-      tags:
-        - experiments
-      summary: Delete an experiment.
       description: Delete an experiment.
       operationId: deleteExperiment
       parameters:
-        - name: experimentId
+        - description: ID to uniquely identify an experiment.
+          explode: false
           in: path
-          description: ID to uniquely identify an experiment.
+          name: experimentId
           required: true
           schema:
             type: string
+          style: simple
       responses:
-        '200':
+        "200":
           description: Experiment deleted
-        '400':
+        "400":
           description: Invalid experiment value
         default:
-          description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-  /experiments/{experimentId}/status:
-    get:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Delete an experiment.
       tags:
         - experiments
-      summary: Get experiment status
+    get:
+      description: Get full details of an experiment by its unique ID.
+      operationId: getExperiment
+      parameters:
+        - description: ID to uniquely identify an experiment.
+          explode: false
+          in: path
+          name: experimentId
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Experiment'
+          description: Successful operation
+        "400":
+          description: Invalid status value
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Get experiment by ID.
+      tags:
+        - experiments
+    put:
+      description: This can only be done by the user who owns the experiment.
+      operationId: updateExperiment
+      parameters:
+        - description: ID to uniquely identify an experiment.
+          explode: false
+          in: path
+          name: experimentId
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExperimentInput'
+        description: Update an existent experiment in the store
+      responses:
+        "200":
+          description: successful operation
+        "400":
+          description: bad request
+        "404":
+          description: experiment not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Update an experiment.
+      tags:
+        - experiments
+  /experiments/{experimentId}/status:
+    get:
       description: Retrieve the current status and progress of an experiment.
       operationId: getExperimentStatus
       parameters:
-        - name: experimentId
+        - description: Unique ID to identify the experiment.
+          explode: false
           in: path
-          description: Unique ID to identify the experiment.
+          name: experimentId
           required: true
           schema:
             type: string
+          style: simple
       responses:
-        '200':
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExperimentStatus'
           description: Experiment status retrieved successfully.
+        "404":
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  experimentId:
-                    type: string
-                    example: "123e4567-e89b-12d3-a456-426614174000"
-                  status:
-                    type: string
-                    example: "running"
-                  progress:
-                    type: integer
-                    example: 45
-                    description: Progress percentage (0-100)
-        '404':
+                $ref: '#/components/schemas/Error'
           description: Experiment not found.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
         default:
-          description: Unexpected error while retrieving experiment status.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /experiments/{experimentId}/results:
-    get:
+          description: Unexpected error while retrieving experiment status.
+      summary: Get experiment status
       tags:
         - experiments
-        - results
-      summary: Get results for an experiment.
+  /experiments/{experimentId}/results:
+    get:
       description: Get list of files to download for results.
       operationId: getExperimentResults
       parameters:
-        - name: experimentId
+        - description: ID to uniquely identify an experiment.
+          explode: false
           in: path
-          description: ID to uniquely identify an experiment.
+          name: experimentId
           required: true
           schema:
             type: string
+          style: simple
       responses:
-        '200':
+        "200":
           description: Successful operation
-        '400':
+        "400":
           description: Invalid status value
         default:
-          description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-    post:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Get results for an experiment.
       tags:
         - experiments
         - results
-      summary: Upload results for an experiment.
+    post:
       description: This can only be done by the logged in user.
       operationId: uploadResults
       parameters:
-        - name: experimentId
+        - description: ID to uniquely identify an experiment.
+          explode: false
           in: path
-          description: ID to uniquely identify an experiment.
+          name: experimentId
           required: true
           schema:
             type: string
+          style: simple
       requestBody:
-        description: Results to upload along with metadata
         content:
           multipart/form-data:
             schema:
-              type: object
-              properties:
-                filename:
-                  type: array
-                  items:
-                    type: string
-                    format: binary
+              $ref: '#/components/schemas/UploadResults'
+        description: Results to upload along with metadata
       responses:
-        '200':
+        "200":
           description: Successful operation
         default:
-          description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-  /user:
-    post:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Upload results for an experiment.
       tags:
-        - user
-      summary: Create user.
-      description: This can only be done by the logged in user.
+        - experiments
+        - results
+  /users:
+    post:
+      description: This can only be done by the superuser.
       operationId: createUser
       requestBody:
-        description: Created user object
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserInput'
+        $ref: '#/components/requestBodies/User'
       responses:
-        '200':
-          description: successful operation
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+          description: Successful operation
         default:
-          description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-  /user/{username}:
-    get:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Create a user.
       tags:
-        - user
-      summary: Get user by user name.
-      description: Get user detail based on username.
-      operationId: getUserByName
-      parameters:
-        - name: username
-          in: path
-          description: The name that needs to be fetched. Use user1 for testing
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: successful operation
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '400':
-          description: Invalid username supplied
-        '404':
-          description: User not found
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-    put:
-      tags:
-        - user
-      summary: Update user resource.
-      description: This can only be done by the logged in user.
-      operationId: updateUser
-      parameters:
-        - name: username
-          in: path
-          description: name that need to be deleted
-          required: true
-          schema:
-            type: string
-      requestBody:
-        description: Update an existent user in the store
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UserInput'
-      responses:
-        '200':
-          description: successful operation
-        '400':
-          description: bad request
-        '404':
-          description: user not found
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+        - users
+  /users/{username}:
     delete:
-      tags:
-        - user
-      summary: Delete user resource.
       description: This can only be done by the logged in user.
       operationId: deleteUser
       parameters:
-        - name: username
+        - description: The username that needs to be deleted
+          explode: false
           in: path
-          description: The username that needs to be deleted
+          name: username
           required: true
           schema:
             type: string
+          style: simple
       responses:
-        '200':
+        "200":
           description: User deleted
-        '400':
+        "400":
           description: Invalid username supplied
-        '404':
+        "404":
           description: User not found
         default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
           description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /infrastructure/videos:
-      post:
-        tags:
-          - videos
-        summary: Create video
-        description: Upload a new video to the infrastructure portal (Super User access required).
-        operationId: createVideo
-        requestBody:
-          required: true
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/VideoInput'
-        responses:
-          '200':
-            description: Video created successfully
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Video'
-          '400':
-            description: Invalid video upload data
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-          '415':
-            description: Unsupported media type for video upload.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-          '422':
-            description: Video file validation error.
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-          default:
-            description: Unexpected error
-            content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-
-      get:
-        tags:
-          - videos
-        summary: Retrieve videos list
-        description: Fetch a list of all available videos.
-        operationId: getVideos
-        responses:
-          '200':
-            description: A list of videos
-            content:
-              application/json:
-                schema:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/Video'
-          default:
-            description: Unexpected error
-            content:
-              application/json:
-                schema:
-                  $ref: "#/components/schemas/Error"
-
-  /infrastructure/videos/{id}:
-    get:
+      summary: Delete user resource.
       tags:
-        - videos
-      summary: Retrieve video
-      description: Fetch a specific video by ID.
-      operationId: getVideo
+        - users
+    get:
+      description: Get uses detail based on username.
+      operationId: getUserByName
       parameters:
-        - name: id
+        - description: The name that needs to be fetched. Use users1 for testing
+          explode: false
           in: path
+          name: username
           required: true
           schema:
             type: string
+          style: simple
       responses:
-        '200':
-          description: Video details
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Successful operation
+        "400":
+          description: Invalid username supplied
+        "404":
+          description: User not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Get user by username.
+      tags:
+        - users
+    put:
+      description: This can only be done by the logged in user or superuser.
+      operationId: updateUser
+      parameters:
+        - description: name that need to be deleted
+          explode: false
+          in: path
+          name: username
+          required: true
+          schema:
+            type: string
+          style: simple
+      requestBody:
+        $ref: '#/components/requestBodies/User'
+      responses:
+        "200":
+          description: Successful operation
+        "400":
+          description: Bad request
+        "404":
+          description: User not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Update user resource.
+      tags:
+        - users
+  /infrastructure/videos:
+    get:
+      description: Fetch a list of all available videos.
+      operationId: getVideos
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Video'
+                type: array
+          description: A list of videos
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Retrieve videos list
+      tags:
+        - videos
+    post:
+      description: Upload a new video to the infrastructure portal (Super User access
+        required).
+      operationId: createVideo
+      requestBody:
+        $ref: '#/components/requestBodies/Video'
+      responses:
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Video'
-        '404':
-          description: Video not found
-          content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-        default:
-          description: Unexpected error
+          description: Video created successfully
+        "400":
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-
-    delete:
+                $ref: '#/components/schemas/Error'
+          description: Invalid video upload data
+        "415":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unsupported media type for video upload.
+        "422":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Video file validation error.
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Create video
       tags:
         - videos
-      summary: Delete video
+  /infrastructure/videos/{id}:
+    delete:
       description: Delete a specific video by ID (Super User access required).
       operationId: deleteVideo
       parameters:
-        - name: id
+        - explode: false
           in: path
+          name: id
           required: true
           schema:
             type: string
+          style: simple
       responses:
-        '200':
-          description: Video deleted
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Video'
-        '404':
+          description: Video deleted
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
           description: Video not found
-          content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
         default:
-          description: Unexpected error
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-
-  /infrastructure/encoders:
-    post:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Delete video
       tags:
-        - encoders
-      summary: Create encoder
-      description: Create a new encoder (Super User access required).
-      operationId: createEncoder
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EncoderInput'
-      responses:
-        '200':
-          description: Encoder created
-        '400':
-          description: Invalid payload
-          content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
+        - videos
     get:
+      description: Fetch a specific video by ID.
+      operationId: getVideo
+      parameters:
+        - explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Video'
+          description: Video details
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Video not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Retrieve video
       tags:
-        - encoders
-      summary: Retrieve encoder list
+        - videos
+  /infrastructure/encoders:
+    get:
       description: Fetch a list of all encoders.
       operationId: getEncoders
       responses:
-        '200':
-          description: A list of encoders
+        "200":
           content:
             application/json:
               schema:
-                type: array
                 items:
                   $ref: '#/components/schemas/Encoder'
+                type: array
+          description: A list of encoders
         default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-  /infrastructure/encoders/{id}:
-    get:
-      tags:
-        - encoders
-      summary: Retrieve encoder
-      description: Fetch a specific encoder by ID.
-      operationId: getEncoder
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      responses:
-        '200':
-          description: Encoder details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Encoder'
-        '404':
-          description: Encoder not found
-          content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-
-    put:
-      tags:
-        - encoders
-      summary: Update encoder
-      description: Update an existing encoder (Super User access required).
-      operationId: updateEncoder
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/EncoderInput'
-      responses:
-        '200':
-          description: Encoder updated
-        '400':
-          description: Invalid payload
-          content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-        '404':
-          description: Encoder not found
-          content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-        default:
-          description: Unexpected error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-    delete:
+          description: Unexpected error
+      summary: Retrieve encoder list
       tags:
         - encoders
-      summary: Delete encoder
+    post:
+      description: Create a new encoder (Super User access required).
+      operationId: createEncoder
+      requestBody:
+        $ref: '#/components/requestBodies/Encoder'
+        required: true
+      responses:
+        "200":
+          description: Encoder created
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Invalid payload
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Create encoder
+      tags:
+        - encoders
+  /infrastructure/encoders/{id}:
+    delete:
       description: Delete a specific encoder (Super User access required).
       operationId: deleteEncoder
       parameters:
-        - name: id
+        - explode: false
           in: path
+          name: id
           required: true
           schema:
             type: integer
+          style: simple
       responses:
-        '200':
-          description: Encoder deleted
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Encoder'
-        '404':
+          description: Encoder deleted
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
           description: Encoder not found
-          content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
         default:
-          description: Unexpected error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-  /infrastructure/networks:
-    post:
+          description: Unexpected error
+      summary: Delete encoder
       tags:
-        - networks
-      summary: Create network
-      description: Upload a new network (Super User access required).
-      operationId: createNetwork
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NetworkInput'
-      responses:
-        '200':
-          description: Network created
-        '400':
-          description: Invalid payload
-          content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-        default:
-          description: Unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
-
+        - encoders
     get:
+      description: Fetch a specific encoder by ID.
+      operationId: getEncoder
+      parameters:
+        - explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Encoder'
+          description: Encoder details
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Encoder not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Retrieve encoder
       tags:
-        - networks
-      summary: Retrieve networks list
+        - encoders
+    put:
+      description: Update an existing encoder (Super User access required).
+      operationId: updateEncoder
+      parameters:
+        - explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: integer
+          style: simple
+      requestBody:
+        $ref: '#/components/requestBodies/Encoder'
+        required: true
+      responses:
+        "200":
+          description: Encoder updated
+        "400":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Invalid payload
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Encoder not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Update encoder
+      tags:
+        - encoders
+  /infrastructure/networks:
+    get:
       description: Fetch a list of all networks.
       operationId: getNetworks
       responses:
-        '200':
-          description: A list of networks
+        "200":
           content:
             application/json:
               schema:
-                type: array
                 items:
                   $ref: '#/components/schemas/Network'
+                type: array
+          description: A list of networks
         default:
-          description: Unexpected error
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-  /infrastructure/networks/{id}:
-    get:
+          description: Unexpected error
+      summary: Retrieve networks list
       tags:
         - networks
-      summary: Retrieve network
-      description: Fetch a specific network by ID.
-      operationId: getNetwork
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+    post:
+      description: Upload a new network (Super User access required).
+      operationId: createNetwork
+      requestBody:
+        $ref: '#/components/requestBodies/Network'
       responses:
-        '200':
-          description: Network details
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Network'
-        '404':
-          description: Network not found
-          content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-        default:
-          description: Unexpected error
+        "200":
+          description: Network created
+        "400":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-
-    delete:
+          description: Invalid payload
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Create network
       tags:
         - networks
-      summary: Delete network
+  /infrastructure/networks/{id}:
+    delete:
       description: Delete a specific network by ID (Super User access required).
       operationId: deleteNetwork
       parameters:
-        - name: id
+        - explode: false
           in: path
+          name: id
           required: true
           schema:
             type: string
+          style: simple
       responses:
-        '200':
-          description: Network deleted
+        "200":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Network'
-        '404':
-          description: Network not found
-          content:
-              application/json:
-                schema:
-                  $ref: '#/components/schemas/Error'
-        default:
-          description: Unexpected error
+          description: Network deleted
+        "404":
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+          description: Network not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Delete network
+      tags:
+        - networks
+    get:
+      description: Fetch a specific network by ID.
+      operationId: getNetwork
+      parameters:
+        - explode: false
+          in: path
+          name: id
+          required: true
+          schema:
+            type: string
+          style: simple
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Network'
+          description: Network details
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Network not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Retrieve network
+      tags:
+        - networks
 components:
+  requestBodies:
+    Experiment:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ExperimentInput'
+      description: Experiment object that needs to be added to the store
+    Video:
+      content:
+        multipart/form-data:
+          schema:
+            $ref: '#/components/schemas/UploadVideo'
+      description: Video object that needs to be added to the store
+    Network:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NetworkInput'
+      description: Network object that needs to be added to the store
+    Encoder:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/EncoderInput'
+      description: Encoder object to be added to the store
+    User:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserInput'
+      description: User object creation and update in store
   schemas:
     Experiment:
-      type: object
+      example:
+        networkConditions:
+          delay: 50ms
+          packetLoss: 2%
+        createdAt: 2024-04-01T10:00:00Z
+        metricsRequested:
+          - PSNR
+          - PSNR
+        encodingParameters:
+          codec: h264
+          bitrate: 5000kbps
+          resolution: 1920x1080
+        description: An experiment testing video encodings.
+        videoSources:
+          - video1.mp4
+          - video1.mp4
+        id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
+        experimentName: My Test Experiment
+        status: pending
       properties:
         id:
-          type: string
           format: uuid
+          title: id
+          type: string
         experimentName:
+          example: My Test Experiment
+          title: experimentName
           type: string
-          example: "My Test Experiment"
         description:
+          example: An experiment testing video encodings.
+          title: description
           type: string
-          example: "An experiment testing video encodings."
         videoSources:
-          type: array
           items:
+            example: video1.mp4
             type: string
-            example: "video1.mp4"
+          title: videoSources
+          type: array
         encodingParameters:
-          type: object
-          properties:
-            codec:
-              type: string
-              example: "h264"
-            bitrate:
-              type: string
-              example: "5000kbps"
-            resolution:
-              type: string
-              example: "1920x1080"
+          $ref: '#/components/schemas/EncodingParameters'
         networkConditions:
-          type: object
-          properties:
-            packetLoss:
-              type: string
-              example: "2%"
-            delay:
-              type: string
-              example: "50ms"
+          $ref: '#/components/schemas/NetworkConditions'
         metricsRequested:
-          type: array
           items:
+            example: PSNR
             type: string
-            example: "PSNR"
+          title: metricsRequested
+          type: array
         status:
+          example: pending
+          title: status
           type: string
-          example: "pending"
         createdAt:
-          type: string
+          example: 2024-04-01T10:00:00Z
           format: date-time
-          example: "2024-04-01T10:00:00Z"
+          title: createdAt
+          type: string
       required:
-        - experimentName
-        - videoSources
         - encodingParameters
-        - networkConditions
+        - experimentName
         - metricsRequested
-
-    ExperimentInput:
+        - networkConditions
+        - videoSources
+      title: Experiment
       type: object
-      required:
-        - experimentName
-        - videoSources
-        - encodingParameters
-        - networkConditions
-        - metricsRequested
+    ExperimentInput:
+      example:
+        networkConditions:
+          delay: 100ms
+          packetLoss: 1%
+        metricsRequested:
+          - PSNR
+          - SSIM
+        encodingParameters:
+          codec: H.264
+          bitrate: 5000kbps
+          resolution: 1920x1080
+        description: Experiment description text here
+        videoSources:
+          - video1.mp4
+          - video2.mp4
+        experimentName: Video Encoding Test
       properties:
         experimentName:
+          example: Video Encoding Test
+          title: experimentName
           type: string
-          example: "Video Encoding Test"
         description:
+          example: Experiment description text here
+          title: description
           type: string
-          example: "Experiment description text here"
         videoSources:
-          type: array
+          example:
+            - video1.mp4
+            - video2.mp4
           items:
             type: string
-          example: ["video1.mp4", "video2.mp4"]
+          title: videoSources
+          type: array
         encodingParameters:
-          type: object
-          properties:
-            codec:
-              type: string
-              example: "H.264"
-            bitrate:
-              type: string
-              example: "5000kbps"
-            resolution:
-              type: string
-              example: "1920x1080"
+          $ref: '#/components/schemas/ExperimentInput'
         networkConditions:
-          type: object
-          properties:
-            packetLoss:
-              type: string
-              example: "1%"
-            delay:
-              type: string
-              example: "100ms"
+          $ref: '#/components/schemas/ExperimentInput'
         metricsRequested:
-          type: array
+          example:
+            - PSNR
+            - SSIM
           items:
             type: string
-          example: ["PSNR", "SSIM"]
-
-    User:
+          title: metricsRequested
+          type: array
+      required:
+        - encodingParameters
+        - experimentName
+        - metricsRequested
+        - networkConditions
+        - videoSources
+      title: ExperimentInput
       type: object
+    User:
+      example:
+        firstName: John
+        lastName: James
+        password: "12345"
+        id: 10
+        email: john@email.com
+        username: theUser
       properties:
         id:
-          type: integer
-          format: int64
           example: 10
+          format: int64
+          title: id
+          type: integer
         username:
-          type: string
           example: theUser
+          title: username
+          type: string
         firstName:
-          type: string
           example: John
+          title: firstName
+          type: string
         lastName:
-          type: string
           example: James
+          title: lastName
+          type: string
         email:
-          type: string
           example: john@email.com
-        password:
+          title: email
           type: string
-          example: '12345'
-
-    UserInput:
+        password:
+          example: "12345"
+          title: password
+          type: string
+      title: User
       type: object
+    UserInput:
+      example:
+        firstName: John
+        lastName: James
+        password: "12345"
+        email: john@email.com
+        username: theUser
       properties:
         username:
-          type: string
           example: theUser
+          title: username
+          type: string
         firstName:
-          type: string
           example: John
+          title: firstName
+          type: string
         lastName:
-          type: string
           example: James
+          title: lastName
+          type: string
         email:
-          type: string
           example: john@email.com
-        password:
+          title: email
           type: string
-          example: '12345'
-
-    Error:
+        password:
+          example: "12345"
+          title: password
+          type: string
+      title: UserInput
       type: object
+    Error:
+      example:
+        code: code
+        message: message
       properties:
         code:
+          title: code
           type: string
         message:
+          title: message
           type: string
       required:
         - code
         - message
-    Video:
-        type: object
-        properties:
-          id:
-            type: string
-          video:
-            type: string
-            format: binary
-          frameRate:
-            type: string
-          resolution:
-            type: string
-          createdDate:
-            type: string
-            format: date-time
-
-    VideoInput:
+      title: Error
       type: object
+    Video:
+      example:
+        frameRate: frameRate
+        createdDate: 2000-01-23T04:56:07.000+00:00
+        id: id
+        video: ""
+        resolution: resolution
+      properties:
+        id:
+          title: id
+          type: string
+        video:
+          format: binary
+          title: video
+          type: string
+        frameRate:
+          title: frameRate
+          type: string
+        resolution:
+          title: resolution
+          type: string
+        createdDate:
+          format: date-time
+          title: createdDate
+          type: string
+      title: Video
+      type: object
+    Encoder:
+      example:
+        name: name
+        encoderCode: encoderCode
+        layers:
+          - ""
+          - ""
+        id: 0
+        encoderType: encoderType
+      properties:
+        id:
+          title: id
+          type: integer
+        name:
+          title: name
+          type: string
+        encoderType:
+          title: encoderType
+          type: string
+        encoderCode:
+          title: encoderCode
+          type: string
+        layers:
+          items:
+            format: binary
+            type: string
+          title: layers
+          type: array
+      title: Encoder
+      type: object
+    EncoderInput:
+      example:
+        name: name
+        encoderCode: encoderCode
+        layers:
+          - ""
+          - ""
+        id: 0
+        encoderType: encoderType
+      properties:
+        id:
+          title: id
+          type: integer
+        name:
+          title: name
+          type: string
+        encoderType:
+          title: encoderType
+          type: string
+        encoderCode:
+          title: encoderCode
+          type: string
+        layers:
+          items:
+            format: binary
+            type: string
+          title: layers
+          type: array
+      title: EncoderInput
+      type: object
+    Network:
+      example:
+        name: name
+        id: 0
+        networkType: networkType
+      properties:
+        id:
+          title: id
+          type: integer
+        name:
+          title: name
+          type: string
+        networkType:
+          title: networkType
+          type: string
+      title: Network
+      type: object
+    ExperimentStatus:
+      example:
+        progress: 45
+        experimentId: 123e4567-e89b-12d3-a456-426614174000
+        status: running
+      properties:
+        experimentId:
+          example: 123e4567-e89b-12d3-a456-426614174000
+          title: experimentId
+          type: string
+        status:
+          example: running
+          title: status
+          type: string
+        progress:
+          description: Progress percentage (0-100)
+          example: 45
+          title: progress
+          type: integer
+      title: getExperimentStatus_200_response
+      type: object
+    UploadVideo:
       properties:
         video:
-          type: string
           format: binary
+          type: string
         frameRate:
           type: string
         resolution:
           type: string
-
-    Encoder:
       type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        encoderType:
-          type: string
-        encoderCode:
-          type: string
-        layers:
-          type: array
-          items:
-            type: string
-            format: binary
-
-    EncoderInput:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        encoderType:
-          type: string
-        encoderCode:
-          type: string
-        layers:
-          type: array
-          items:
-            type: string
-            format: binary
-
-    Network:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        networkType:
-          type: string
-
     NetworkInput:
-      type: object
       properties:
         name:
+          title: name
           type: string
         networkType:
+          title: networkType
           type: string
-
-  requestBodies:
-    Experiment:
-      description: Experiment object that needs to be added to the store
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/Experiment'
-    UserArray:
-      description: List of user object
-      content:
-        application/json:
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/User'
+      title: createNetwork_request
+      type: object
+    EncodingParameters:
+      example:
+        codec: h264
+        bitrate: 5000kbps
+        resolution: 1920x1080
+      properties:
+        codec:
+          example: h264
+          title: codec
+          type: string
+        bitrate:
+          example: 5000kbps
+          title: bitrate
+          type: string
+        resolution:
+          example: 1920x1080
+          title: resolution
+          type: string
+      title: Experiment_encodingParameters
+      type: object
+    NetworkConditions:
+      example:
+        delay: 50ms
+        packetLoss: 2%
+      properties:
+        packetLoss:
+          example: 2%
+          title: packetLoss
+          type: string
+        delay:
+          example: 50ms
+          title: delay
+          type: string
+      title: NetworkConditions
+      type: object
+    UploadResults:
+      type: object
+      properties:
+        filename:
+          type: array
+          items:
+            type: string
+            format: binary
