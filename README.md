@@ -31,3 +31,13 @@ poetry run uvicorn app.main:app --reload
 ```
 
 - Swagger docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### OpenAPI Generator
+
+Generate code from OpenAPI specification [docs](https://openapi-generator.tech/docs/generators/python-fastapi/).
+
+```bash
+npm install @openapitools/openapi-generator-cli -g
+
+npx @openapitools/openapi-generator-cli generate -i openapi.yaml -g python-fastapi
+```
