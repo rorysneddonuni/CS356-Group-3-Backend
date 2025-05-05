@@ -2,19 +2,48 @@
 name = "CS356-Group-3-Backend"
 version = "0.1.0"
 description = "A FastAPI project using Poetry"
-authors = ["Rory Sneddon <rory.sneddon.2022@uni.strath.ac.uk>"]
+authors = ["Rory Sneddon <rory.sneddon.2022@uni.strath.ac.uk>", "Angus Henderson <angushenderson04@gmail.com>"]
 readme = "README.md"
 packages = [{ include = "app" }]
 
 [tool.poetry.dependencies]
 python = "^3.10"
-fastapi = "^0.110.0"
-uvicorn = "^0.29.0"
+fastapi = "^0.115.12"
+uvicorn = "^0.34.2"
 pyyaml = "^6.0.2"
+pydantic = "^2.11.4"
+python-multipart = "^0.0.20"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.1.1"
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.black]
+line-length = 88
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+)
+'''
+
+[tool.isort]
+profile = "black"
+skip = [
+    '.eggs', '.git', '.hg', '.mypy_cache', '.nox', '.pants.d', '.tox',
+    '.venv', '_build', 'buck-out', 'build', 'dist', 'node_modules', 'venv',
+]
+skip_gitignore = true

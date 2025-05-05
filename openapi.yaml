@@ -5,20 +5,20 @@ info:
   title: IKlik Backend Services
   version: 1.0.0
 servers:
-  - url: https://localhost:8000/api/v1
+- url: https://localhost:8000/api/v1
 tags:
-  - description: Management of experiments
-    name: experiments
-  - description: Results for given experiments
-    name: results
-  - description: Operations about users
-    name: users
-  - description: Operations related to videos in the Infrastructure Portal
-    name: videos
-  - description: Operations related to encoders in the Infrastructure Portal
-    name: encoders
-  - description: Operations related to networks in the Infrastructure Portal
-    name: networks
+- description: Management of experiments
+  name: experiments
+- description: Results for given experiments
+  name: results
+- description: Operations about users
+  name: users
+- description: Operations related to videos in the Infrastructure Portal
+  name: videos
+- description: Operations related to encoders in the Infrastructure Portal
+  name: encoders
+- description: Operations related to networks in the Infrastructure Portal
+  name: networks
 paths:
   /experiments:
     get:
@@ -43,14 +43,12 @@ paths:
           description: Unexpected error
       summary: List experiments.
       tags:
-        - experiments
+      - experiments
     post:
       description: Create a new experiment under a given user.
       operationId: createExperiment
       requestBody:
         $ref: '#/components/requestBodies/Experiment'
-        description: Create a new experiment
-        required: true
       responses:
         "200":
           content:
@@ -70,20 +68,20 @@ paths:
           description: Unexpected error
       summary: Create a new experiment.
       tags:
-        - experiments
+      - experiments
   /experiments/{experimentId}:
     delete:
       description: Delete an experiment.
       operationId: deleteExperiment
       parameters:
-        - description: ID to uniquely identify an experiment.
-          explode: false
-          in: path
-          name: experimentId
-          required: true
-          schema:
-            type: string
-          style: simple
+      - description: ID to uniquely identify an experiment.
+        explode: false
+        in: path
+        name: experimentId
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           description: Experiment deleted
@@ -97,19 +95,19 @@ paths:
           description: Unexpected error
       summary: Delete an experiment.
       tags:
-        - experiments
+      - experiments
     get:
       description: Get full details of an experiment by its unique ID.
       operationId: getExperiment
       parameters:
-        - description: ID to uniquely identify an experiment.
-          explode: false
-          in: path
-          name: experimentId
-          required: true
-          schema:
-            type: string
-          style: simple
+      - description: ID to uniquely identify an experiment.
+        explode: false
+        in: path
+        name: experimentId
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -127,23 +125,21 @@ paths:
           description: Unexpected error
       summary: Get experiment by ID.
       tags:
-        - experiments
+      - experiments
     put:
       description: This can only be done by the user who owns the experiment.
       operationId: updateExperiment
       parameters:
-        - description: ID to uniquely identify an experiment.
-          explode: false
-          in: path
-          name: experimentId
-          required: true
-          schema:
-            type: string
-          style: simple
+      - description: ID to uniquely identify an experiment.
+        explode: false
+        in: path
+        name: experimentId
+        required: true
+        schema:
+          type: string
+        style: simple
       requestBody:
         $ref: '#/components/requestBodies/Experiment'
-        description: Update an existent experiment in the store
-        required: true
       responses:
         "200":
           description: successful operation
@@ -159,20 +155,20 @@ paths:
           description: Unexpected error
       summary: Update an experiment.
       tags:
-        - experiments
+      - experiments
   /experiments/{experimentId}/status:
     get:
       description: Retrieve the current status and progress of an experiment.
       operationId: getExperimentStatus
       parameters:
-        - description: Unique ID to identify the experiment.
-          explode: false
-          in: path
-          name: experimentId
-          required: true
-          schema:
-            type: string
-          style: simple
+      - description: Unique ID to identify the experiment.
+        explode: false
+        in: path
+        name: experimentId
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -194,20 +190,20 @@ paths:
           description: Unexpected error while retrieving experiment status.
       summary: Get experiment status
       tags:
-        - experiments
+      - experiments
   /experiments/{experimentId}/results:
     get:
       description: Get list of files to download for results.
       operationId: getExperimentResults
       parameters:
-        - description: ID to uniquely identify an experiment.
-          explode: false
-          in: path
-          name: experimentId
-          required: true
-          schema:
-            type: string
-          style: simple
+      - description: ID to uniquely identify an experiment.
+        explode: false
+        in: path
+        name: experimentId
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           description: Successful operation
@@ -221,20 +217,20 @@ paths:
           description: Unexpected error
       summary: Get results for an experiment.
       tags:
-        - experiments
-        - results
+      - experiments
+      - results
     post:
       description: This can only be done by the logged in user.
       operationId: uploadResults
       parameters:
-        - description: ID to uniquely identify an experiment.
-          explode: false
-          in: path
-          name: experimentId
-          required: true
-          schema:
-            type: string
-          style: simple
+      - description: ID to uniquely identify an experiment.
+        explode: false
+        in: path
+        name: experimentId
+        required: true
+        schema:
+          type: string
+        style: simple
       requestBody:
         content:
           multipart/form-data:
@@ -252,8 +248,8 @@ paths:
           description: Unexpected error
       summary: Upload results for an experiment.
       tags:
-        - experiments
-        - results
+      - experiments
+      - results
   /users:
     post:
       description: This can only be done by the superuser.
@@ -275,20 +271,20 @@ paths:
           description: Unexpected error
       summary: Create a user.
       tags:
-        - users
+      - users
   /users/{username}:
     delete:
       description: This can only be done by the logged in user.
       operationId: deleteUser
       parameters:
-        - description: The username that needs to be deleted
-          explode: false
-          in: path
-          name: username
-          required: true
-          schema:
-            type: string
-          style: simple
+      - description: The username that needs to be deleted
+        explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           description: User deleted
@@ -304,19 +300,19 @@ paths:
           description: Unexpected error
       summary: Delete user resource.
       tags:
-        - users
+      - users
     get:
       description: Get uses detail based on username.
       operationId: getUserByName
       parameters:
-        - description: The name that needs to be fetched. Use users1 for testing
-          explode: false
-          in: path
-          name: username
-          required: true
-          schema:
-            type: string
-          style: simple
+      - description: The name that needs to be fetched. Use users1 for testing
+        explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -336,19 +332,19 @@ paths:
           description: Unexpected error
       summary: Get user by username.
       tags:
-        - users
+      - users
     put:
       description: This can only be done by the logged in user or superuser.
       operationId: updateUser
       parameters:
-        - description: name that need to be deleted
-          explode: false
-          in: path
-          name: username
-          required: true
-          schema:
-            type: string
-          style: simple
+      - description: name that need to be deleted
+        explode: false
+        in: path
+        name: username
+        required: true
+        schema:
+          type: string
+        style: simple
       requestBody:
         $ref: '#/components/requestBodies/User'
       responses:
@@ -366,7 +362,7 @@ paths:
           description: Unexpected error
       summary: Update user resource.
       tags:
-        - users
+      - users
   /infrastructure/videos:
     get:
       description: Fetch a list of all available videos.
@@ -388,7 +384,7 @@ paths:
           description: Unexpected error
       summary: Retrieve videos list
       tags:
-        - videos
+      - videos
     post:
       description: Upload a new video to the infrastructure portal (Super User access
         required).
@@ -428,19 +424,19 @@ paths:
           description: Unexpected error
       summary: Create video
       tags:
-        - videos
+      - videos
   /infrastructure/videos/{id}:
     delete:
       description: Delete a specific video by ID (Super User access required).
       operationId: deleteVideo
       parameters:
-        - explode: false
-          in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -462,18 +458,18 @@ paths:
           description: Unexpected error
       summary: Delete video
       tags:
-        - videos
+      - videos
     get:
       description: Fetch a specific video by ID.
       operationId: getVideo
       parameters:
-        - explode: false
-          in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -495,7 +491,7 @@ paths:
           description: Unexpected error
       summary: Retrieve video
       tags:
-        - videos
+      - videos
   /infrastructure/encoders:
     get:
       description: Fetch a list of all encoders.
@@ -517,7 +513,7 @@ paths:
           description: Unexpected error
       summary: Retrieve encoder list
       tags:
-        - encoders
+      - encoders
     post:
       description: Create a new encoder (Super User access required).
       operationId: createEncoder
@@ -540,19 +536,19 @@ paths:
           description: Unexpected error
       summary: Create encoder
       tags:
-        - encoders
+      - encoders
   /infrastructure/encoders/{id}:
     delete:
       description: Delete a specific encoder (Super User access required).
       operationId: deleteEncoder
       parameters:
-        - explode: false
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
       responses:
         "200":
           content:
@@ -574,18 +570,18 @@ paths:
           description: Unexpected error
       summary: Delete encoder
       tags:
-        - encoders
+      - encoders
     get:
       description: Fetch a specific encoder by ID.
       operationId: getEncoder
       parameters:
-        - explode: false
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
       responses:
         "200":
           content:
@@ -607,18 +603,18 @@ paths:
           description: Unexpected error
       summary: Retrieve encoder
       tags:
-        - encoders
+      - encoders
     put:
       description: Update an existing encoder (Super User access required).
       operationId: updateEncoder
       parameters:
-        - explode: false
-          in: path
-          name: id
-          required: true
-          schema:
-            type: integer
-          style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: integer
+        style: simple
       requestBody:
         $ref: '#/components/requestBodies/Encoder'
       responses:
@@ -644,7 +640,7 @@ paths:
           description: Unexpected error
       summary: Update encoder
       tags:
-        - encoders
+      - encoders
   /infrastructure/networks:
     get:
       description: Fetch a list of all networks.
@@ -666,7 +662,7 @@ paths:
           description: Unexpected error
       summary: Retrieve networks list
       tags:
-        - networks
+      - networks
     post:
       description: Upload a new network (Super User access required).
       operationId: createNetwork
@@ -689,19 +685,19 @@ paths:
           description: Unexpected error
       summary: Create network
       tags:
-        - networks
+      - networks
   /infrastructure/networks/{id}:
     delete:
       description: Delete a specific network by ID (Super User access required).
       operationId: deleteNetwork
       parameters:
-        - explode: false
-          in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -723,18 +719,18 @@ paths:
           description: Unexpected error
       summary: Delete network
       tags:
-        - networks
+      - networks
     get:
       description: Fetch a specific network by ID.
       operationId: getNetwork
       parameters:
-        - explode: false
-          in: path
-          name: id
-          required: true
-          schema:
-            type: string
-          style: simple
+      - explode: false
+        in: path
+        name: id
+        required: true
+        schema:
+          type: string
+        style: simple
       responses:
         "200":
           content:
@@ -756,7 +752,7 @@ paths:
           description: Unexpected error
       summary: Retrieve network
       tags:
-        - networks
+      - networks
 components:
   requestBodies:
     Experiment:
@@ -795,18 +791,18 @@ components:
         networkConditions:
           delay: 50ms
           packetLoss: 2%
-        createdAt: "2024-04-01T10:00:00Z"
+        createdAt: 2024-04-01T10:00:00Z
         metricsRequested:
-          - PSNR
-          - PSNR
+        - PSNR
+        - PSNR
         encodingParameters:
           codec: h264
           bitrate: 5000kbps
           resolution: 1920x1080
         description: An experiment testing video encodings.
         videoSources:
-          - video1.mp4
-          - video1.mp4
+        - video1.mp4
+        - video1.mp4
         id: 046b6c7f-0b8a-43b9-b35d-6489e6daee91
         experimentName: My Test Experiment
         status: pending
@@ -844,16 +840,16 @@ components:
           title: status
           type: string
         createdAt:
-          example: "2024-04-01T10:00:00Z"
+          example: 2024-04-01T10:00:00Z
           format: date-time
           title: createdAt
           type: string
       required:
-        - encodingParameters
-        - experimentName
-        - metricsRequested
-        - networkConditions
-        - videoSources
+      - encodingParameters
+      - experimentName
+      - metricsRequested
+      - networkConditions
+      - videoSources
       title: Experiment
       type: object
     ExperimentInput:
@@ -862,16 +858,16 @@ components:
           delay: 100ms
           packetLoss: 1%
         metricsRequested:
-          - PSNR
-          - SSIM
+        - PSNR
+        - SSIM
         encodingParameters:
           codec: H.264
           bitrate: 5000kbps
           resolution: 1920x1080
         description: Experiment description text here
         videoSources:
-          - video1.mp4
-          - video2.mp4
+        - video1.mp4
+        - video2.mp4
         experimentName: Video Encoding Test
       properties:
         experimentName:
@@ -884,8 +880,8 @@ components:
           type: string
         videoSources:
           example:
-            - video1.mp4
-            - video2.mp4
+          - video1.mp4
+          - video2.mp4
           items:
             type: string
           title: videoSources
@@ -896,18 +892,18 @@ components:
           $ref: '#/components/schemas/ExperimentInput'
         metricsRequested:
           example:
-            - PSNR
-            - SSIM
+          - PSNR
+          - SSIM
           items:
             type: string
           title: metricsRequested
           type: array
       required:
-        - encodingParameters
-        - experimentName
-        - metricsRequested
-        - networkConditions
-        - videoSources
+      - encodingParameters
+      - experimentName
+      - metricsRequested
+      - networkConditions
+      - videoSources
       title: ExperimentInput
       type: object
     User:
@@ -988,14 +984,14 @@ components:
           title: message
           type: string
       required:
-        - code
-        - message
+      - code
+      - message
       title: Error
       type: object
     Video:
       example:
         frameRate: frameRate
-        createdDate: "2000-01-23T04:56:07.000+00:00"
+        createdDate: 2000-01-23T04:56:07.000+00:00
         id: id
         video: ""
         resolution: resolution
@@ -1024,8 +1020,8 @@ components:
         name: name
         encoderCode: encoderCode
         layers:
-          - ""
-          - ""
+        - ""
+        - ""
         id: 0
         encoderType: encoderType
       properties:
@@ -1054,8 +1050,8 @@ components:
         name: name
         encoderCode: encoderCode
         layers:
-          - ""
-          - ""
+        - ""
+        - ""
         id: 0
         encoderType: encoderType
       properties:
