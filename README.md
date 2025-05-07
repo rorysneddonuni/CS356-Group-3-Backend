@@ -18,6 +18,12 @@ Install [Poetry](https://python-poetry.org/docs/#installation):
 curl -sSL https://install.python-poetry.org | python3 -
 ```
 
+Install the Python libraries required for the project from the requirements.txt file 
+
+```bash
+pip install -r requirements.txt
+```
+
 ### Installation
 
 ```bash
