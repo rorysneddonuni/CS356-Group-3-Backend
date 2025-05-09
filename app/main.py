@@ -9,7 +9,7 @@ from app.routers.results import router as results_router
 from app.routers.users import router as users_router
 from app.routers.videos import router as videos_router
 
-from database.database import engine, Base
+from app.database.database import engine, Base
 
 app = FastAPI(title="IKlik Backend Services",
               description="API gateway for dataservices providing data access and management for IKlik services.",
