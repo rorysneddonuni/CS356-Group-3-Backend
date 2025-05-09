@@ -13,6 +13,7 @@ Group project module for CS356
 ### Prerequisites
 
 Install [Poetry](https://python-poetry.org/docs/#installation):
+Install [SQL Model](https://fastapi.tiangolo.com/tutorial/sql-databases/?h=sql)
 
 ```bash
 curl -sSL https://install.python-poetry.org | python3 -
@@ -31,3 +32,12 @@ poetry run uvicorn app.main:app --reload
 ```
 
 - Swagger docs: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+### Run the Database
+
+TODO - combine with main api
+
+Change Directory to app/database
+```command
+fastapi dev set_up_database.py
+```
