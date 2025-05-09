@@ -1,7 +1,9 @@
 from typing import ClassVar, Tuple, Optional
 from fastapi import HTTPException
+from fastapi.responses import JSONResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy import or_
 
 from app.models.user       import User        as PydanticUser
 from app.models.user_input import UserInput
@@ -16,17 +18,32 @@ class UsersService:
         UsersService.subclasses += (cls,)
 
     async def create_user(
-        self,
-        user_input: UserInput,
-        db: AsyncSession
+    self,
+    user_input: UserInput,
+    db: AsyncSession
     ) -> PydanticUser:
-        # Dump only the fields the user actually set
-        data = user_input.model_dump(exclude_none=True)
-        db_obj = UserTable(**data)
+        # Check if username or email already exists
+        result = await db.execute(
+            select(UserTable).where(
+                or_(
+                    UserTable.username == user_input.username,
+                    UserTable.email == user_input.email
+                )
+            )
+        )
+        existing = result.scalars().first()
+        if existing:
+            if existing.username == user_input.username:
+                raise HTTPException(status_code=400, detail="Username already exists")
+            else:
+                raise HTTPException(status_code=400, detail="Email already registered")
+
+        # Create and save user
+        db_obj = UserTable(**user_input.model_dump(exclude_none=True))
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
-        # Convert the ORM object dict into your Pydantic model
+
         return PydanticUser.model_validate(db_obj.__dict__)
 
     async def get_user_by_name(
@@ -61,6 +78,7 @@ class UsersService:
 
         db.add(db_obj)
         await db.commit()
+        return PydanticUser.model_validate(db_obj.__dict__)
 
     async def delete_user(
         self,
@@ -76,6 +94,7 @@ class UsersService:
 
         await db.delete(db_obj)
         await db.commit()
+        return JSONResponse(status_code=200, content={"message": "User deleted"})
 
 
 # Register the concrete implementation so that
