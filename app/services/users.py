@@ -1,13 +1,14 @@
-from typing import ClassVar, Tuple, Optional
+from typing import ClassVar, Tuple
+
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
+from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy import or_
 
-from app.models.user       import User        as PydanticUser
+from app.database.tables.user import UserTable
+from app.models.user import User
 from app.models.user_input import UserInput
-from app.database.tables.user  import UserTable
 
 
 class UsersService:
@@ -17,20 +18,10 @@ class UsersService:
         super().__init_subclass__(**kwargs)
         UsersService.subclasses += (cls,)
 
-    async def create_user(
-    self,
-    user_input: UserInput,
-    db: AsyncSession
-    ) -> PydanticUser:
+    async def create_user(self, user_input: UserInput, db: AsyncSession) -> User:
         # Check if username or email already exists
-        result = await db.execute(
-            select(UserTable).where(
-                or_(
-                    UserTable.username == user_input.username,
-                    UserTable.email == user_input.email
-                )
-            )
-        )
+        result = await db.execute(select(UserTable).where(
+            or_(UserTable.username == user_input.username, UserTable.email == user_input.email)))
         existing = result.scalars().first()
         if existing:
             if existing.username == user_input.username:
@@ -44,30 +35,17 @@ class UsersService:
         await db.commit()
         await db.refresh(db_obj)
 
-        return PydanticUser.model_validate(db_obj.__dict__)
+        return User.model_validate(db_obj.__dict__)
 
-    async def get_user_by_name(
-        self,
-        username: str,
-        db: AsyncSession
-    ) -> PydanticUser:
-        result = await db.execute(
-            select(UserTable).where(UserTable.username == username)
-        )
+    async def get_user_by_name(self, username: str, db: AsyncSession) -> User:
+        result = await db.execute(select(UserTable).where(UserTable.username == username))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
-        return PydanticUser.model_validate(db_obj.__dict__)
+        return User.model_validate(db_obj.__dict__)
 
-    async def update_user(
-        self,
-        username: str,
-        user_input: UserInput,
-        db: AsyncSession
-    ) -> None:
-        result = await db.execute(
-            select(UserTable).where(UserTable.username == username)
-        )
+    async def update_user(self, username: str, user_input: UserInput, db: AsyncSession) -> None:
+        result = await db.execute(select(UserTable).where(UserTable.username == username))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
@@ -78,16 +56,10 @@ class UsersService:
 
         db.add(db_obj)
         await db.commit()
-        return PydanticUser.model_validate(db_obj.__dict__)
+        return User.model_validate(db_obj.__dict__)
 
-    async def delete_user(
-        self,
-        username: str,
-        db: AsyncSession
-    ) -> None:
-        result = await db.execute(
-            select(UserTable).where(UserTable.username == username)
-        )
+    async def delete_user(self, username: str, db: AsyncSession) -> None:
+        result = await db.execute(select(UserTable).where(UserTable.username == username))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
