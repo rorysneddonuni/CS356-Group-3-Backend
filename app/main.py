@@ -9,6 +9,8 @@ from app.routers.results import router as results_router
 from app.routers.users import router as users_router
 from app.routers.videos import router as videos_router
 
+from app.database.database import engine, Base
+
 app = FastAPI(title="IKlik Backend Services",
               description="API gateway for dataservices providing data access and management for IKlik services.",
               version="1.0.0", )
@@ -25,6 +27,10 @@ app.include_router(videos_router)
 def read_root():
     return {"message": "Hello World!"}
 
+@app.on_event("startup")
+async def on_startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 # def custom_openapi():
 #     if app.openapi_schema:
