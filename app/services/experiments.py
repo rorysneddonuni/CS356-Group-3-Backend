@@ -15,7 +15,7 @@ from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-import utility.video_file_handler as video_file_handler
+import app.services.utility.video_file_handler as video_file_handler
 
 
 class ExperimentsService:

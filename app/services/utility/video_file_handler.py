@@ -1,33 +1,33 @@
 import os
 import cv2
 
-video_file_dir = "app/database/videos"
 
-def store_video_file(video, file_name, file_type):
+def store_video_file(video, file_path, codec, fps):
     # https://www.geeksforgeeks.org/saving-a-video-using-opencv/
-    file = video_file_dir + file_name
+    height = video.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    width = video.get(cv2.CAP_PROP_FRAME_WIDTH)
     if video.isOpened() == False:
         print("Error reading video file")
-    result = cv2.VideoWriter(file, cv2.VideoWriter_fourcc(*file_type), 10)
+
+    print(height, type(width))
+    fourcc = cv2.VideoWriter.fourcc(*codec)
+    result = cv2.VideoWriter(file_path, fourcc, fps, (int(width), int(height)))
 
     while (True):
         ret, frame = video.read()
-        if ret == True:
-            result.write(frame)
-            cv2.imshow('Frame', frame)
-        else:
+        if not ret:
             break
+        result.write(frame)
 
     video.release()
     result.release()
     cv2.destroyAllWindows()
 
-def delete_video_file(file_name):
-    file = video_file_dir + file_name
-    if os.path.exists(file):
-        os.remove(file)
+def delete_video_file(file_path):
+    if os.path.exists(file_path):
+        os.remove(file_path)
     else:
         print("The video file does not exist")
 
-def retrieve_video_file(file_name):
-    return open(video_file_dir + file_name, "r")
+def retrieve_video_file(file_path):
+    return cv2.VideoCapture(file_path)
