@@ -22,8 +22,6 @@ async def create_experiment(experiment_input: Annotated[
     Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")] = Body(None,
                                                                                                                   description="Experiment object that needs to be added to the store"), ) -> Experiment:
     """Create a new experiment under a given user."""
-    if not ExperimentsService.subclasses:
-        raise HTTPException(status_code=501, detail="Not implemented")
     return await ExperimentsService.subclasses[0]().create_experiment(experiment_input)
 
 
@@ -35,8 +33,6 @@ async def delete_experiment(
         experiment_id: Annotated[StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                                                 description="ID to uniquely identify an experiment."), ) -> None:
     """Delete an experiment."""
-    if not ExperimentsService.subclasses:
-        raise HTTPException(status_code=501, detail="Not implemented")
     return await ExperimentsService.subclasses[0]().delete_experiment(experiment_id)
 
 
@@ -48,8 +44,6 @@ async def get_experiment(
         experiment_id: Annotated[StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                                                 description="ID to uniquely identify an experiment."), ) -> Experiment:
     """Get full details of an experiment by its unique ID."""
-    if not ExperimentsService.subclasses:
-        raise HTTPException(status_code=501, detail="Not implemented")
     return await ExperimentsService.subclasses[0]().get_experiment(experiment_id)
 
 
@@ -61,8 +55,6 @@ async def get_experiment_results(
         experiment_id: Annotated[StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                                                 description="ID to uniquely identify an experiment."), ) -> None:
     """Get list of files to download for results."""
-    if not ExperimentsService.subclasses:
-        raise HTTPException(status_code=501, detail="Not implemented")
     return await ExperimentsService.subclasses[0]().get_experiment_results(experiment_id)
 
 
@@ -75,8 +67,6 @@ async def get_experiment_status(
         experiment_id: Annotated[StrictStr, Field(description="Unique ID to identify the experiment.")] = Path(...,
                                                                                                                description="Unique ID to identify the experiment."), ) -> ExperimentStatus:
     """Retrieve the current status and progress of an experiment."""
-    if not ExperimentsService.subclasses:
-        raise HTTPException(status_code=501, detail="Not implemented")
     return await ExperimentsService.subclasses[0]().get_experiment_status(experiment_id)
 
 
@@ -87,8 +77,6 @@ async def get_experiment_status(
             tags=["experiments"], summary="List experiments.", response_model_by_alias=True, )
 async def get_experiments() -> Experiment:
     """List experiments for a given user."""
-    if not ExperimentsService.subclasses:
-        raise HTTPException(status_code=501, detail="Not implemented")
     return await ExperimentsService.subclasses[0]().get_experiments()
 
 
@@ -104,8 +92,6 @@ async def update_experiment(
             description="Experiment object that needs to be added to the store")] = Body(None,
                                                                                          description="Experiment object that needs to be added to the store"), ) -> None:
     """This can only be done by the user who owns the experiment."""
-    if not ExperimentsService.subclasses:
-        raise HTTPException(status_code=501, detail="Not implemented")
     return await ExperimentsService.subclasses[0]().update_experiment(experiment_id, experiment_input)
 
 
