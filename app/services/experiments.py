@@ -27,7 +27,7 @@ class ExperimentsService:
                                 db: AsyncSession = Depends(get_db)) -> Experiment:
         # Check if experiment name already exists
         result = await db.execute(
-            select(Experiment).where(or_(Experiment.experiment_name == experiment_input.experiment_name)))
+            select(Experiment).where(or_(Experiment.name == experiment_input.experiment_name)))
         existing = result.scalars().first()
         if existing:
             raise HTTPException(status_code=400, detail="Experiment name already exists")

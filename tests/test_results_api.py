@@ -1,3 +1,5 @@
+import io
+
 from fastapi.testclient import TestClient
 
 
@@ -5,7 +7,26 @@ from pydantic import Field, StrictBytes, StrictStr  # noqa: F401
 from typing import Any, List, Optional, Tuple, Union  # noqa: F401
 from typing_extensions import Annotated  # noqa: F401
 from app.models.error import Error  # noqa: F401
+from app.database.tables.experiments import Experiment, ExperimentResult
 
+
+def test_upload_results_file_success(client, db):
+    expected_id = 9000
+    exp = Experiment(id=expected_id, name="UploadTest", description="Test upload results", owner_id="1", status="TEST", codec="", bitrate="", resolution="")
+    db.add(exp)
+    db.commit()
+
+    file_content = b"Some result data"
+    response = client.post(
+        f"/experiments/{exp.id}/results",
+        files={"file": ("result1.txt", io.BytesIO(file_content), "text/plain")}
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["message"] == "File uploaded successfully"
+    assert db.query(ExperimentResult).count() == 1
+    db_result = db.query(ExperimentResult).filter(ExperimentResult.experiment_id == exp.id).first()
+    assert db_result.filename == "result1.txt"
 
 def test_get_experiment_results(client: TestClient):
     """Test case for get_experiment_results
@@ -15,12 +36,11 @@ def test_get_experiment_results(client: TestClient):
 
     headers = {
     }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "GET",
-    #    "/experiments/{experimentId}/results".format(experimentId='experiment_id_example'),
-    #    headers=headers,
-    #)
+    response = client.request(
+       "GET",
+       "/experiments/{experimentId}/results".format(experimentId='experiment_id_example'),
+       headers=headers,
+    )
 
     # uncomment below to assert the status code of the HTTP response
     #assert response.status_code == 200
@@ -37,14 +57,12 @@ def test_upload_results(client: TestClient):
     data = {
         "filename": ['/path/to/file']
     }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "POST",
-    #    "/experiments/{experimentId}/results".format(experimentId='experiment_id_example'),
-    #    headers=headers,
-    #    data=data,
-    #)
+    response = client.request(
+       "POST",
+       "/experiments/{experimentId}/results".format(experimentId='experiment_id_example'),
+       headers=headers,
+       data=data,
+    )
 
-    # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    assert response.status_code == 200
 

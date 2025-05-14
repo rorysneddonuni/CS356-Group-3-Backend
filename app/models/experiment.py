@@ -21,7 +21,7 @@ class Experiment(BaseModel):
     Experiment
     """  # noqa: E501
     id: Optional[StrictStr] = None
-    experiment_name: StrictStr = Field(alias="experimentName")
+    name: StrictStr = Field(alias="experimentName")
     description: Optional[StrictStr] = None
     video_sources: List[StrictStr] = Field(alias="videoSources")
     encoding_parameters: EncodingParameters = Field(alias="encodingParameters")
