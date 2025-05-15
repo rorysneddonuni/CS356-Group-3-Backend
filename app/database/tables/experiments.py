@@ -35,7 +35,7 @@ class ExperimentResult(Base):
     :filename: Filename passed by the user and that which shall be returned
     :path: The path of where this file is stored on system (actual filename will have been modified to avoid conflict)
     """
-    __tablename__ = "experiments_results"
+    __tablename__ = "experiment_results"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     filename = Column(String, nullable=False)
