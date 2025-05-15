@@ -6,9 +6,10 @@ from typing import Tuple
 
 from fastapi import UploadFile, HTTPException
 from pydantic import Field, StrictStr
-from starlette.responses import StreamingResponse, JSONResponse
+from starlette.responses import StreamingResponse
 from typing_extensions import Annotated
 
+from app.config.settings import Settings
 from app.database.database import SessionDep
 from app.database.tables.experiments import ExperimentResult, Experiment
 from app.models.info import Info
@@ -40,16 +41,16 @@ class ResultsService:
                     continue
                 zf.write(result.path, arcname=result.filename)
         zip_buffer.seek(0)
-        return StreamingResponse(zip_buffer, media_type='application/zip', headers={
-            "Content-Disposition": f"attachment; filename={experiment.name}_results.zip"})
+        return StreamingResponse(zip_buffer, media_type='application/zip',
+                                 headers={"Content-Disposition": f"attachment; filename={experiment.name}_results.zip"})
 
-    async def upload_result(self, experiment_id: int, file: UploadFile, db: SessionDep) -> Info:
+    async def upload_result(self, experiment_id: int, file: UploadFile, db: SessionDep, settings: Settings) -> Info:
         if db.query(ExperimentResult).filter(ExperimentResult.experiment_id == experiment_id).filter(
                 ExperimentResult.filename == file.filename).first():
             raise HTTPException(status_code=400,
                                 detail="File with this name has already been uploaded for this experiment")
 
-        path = upload_file(file, "results", str(experiment_id))
+        path = upload_file(file, settings.uploads_directory, "results", str(experiment_id))
 
         result = ExperimentResult(filename=file.filename, experiment_id=experiment_id, path=str(path))
         db.add(result)

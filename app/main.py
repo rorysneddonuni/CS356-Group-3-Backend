@@ -10,7 +10,7 @@ from app.routers.videos import router as videos_router
 
 app = FastAPI(title="IKlik Backend Services",
               description="API gateway for dataservices providing data access and management for IKlik services.",
-              version="1.0.0", )
+              version="1.0.0")
 
 app.include_router(encoders_router)
 app.include_router(experiments_router)

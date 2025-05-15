@@ -2,7 +2,9 @@ from fastapi import APIRouter, HTTPException, UploadFile
 from fastapi.params import File, Depends, Path
 from starlette.responses import StreamingResponse
 
+from app.config.settings import Settings
 from app.database.database import get_db, Session
+from app.config.settings import get_settings
 from app.models.error import Error
 from app.models.info import Info
 from app.services.results import ResultsService
@@ -27,8 +29,9 @@ async def get_experiment_results(experiment_id: int = Path(..., description="ID 
              tags=["experiments", "results"], summary="Upload results for an experiment.",
              response_model_by_alias=True, )
 async def upload_results(experiment_id: int = Path(..., description="ID to uniquely identify an experiment."),
-                         file: UploadFile = File(...), db: Session = Depends(get_db)) -> Info:
+                         file: UploadFile = File(...), db: Session = Depends(get_db),
+                         settings: Settings = Depends(get_settings)) -> Info:
     """This can only be done by the logged-in user."""
     if not ResultsService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
-    return await ResultsService.subclasses[0]().upload_result(experiment_id, file, db)
+    return await ResultsService.subclasses[0]().upload_result(experiment_id, file, db, settings)
