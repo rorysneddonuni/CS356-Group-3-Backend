@@ -49,6 +49,7 @@ class ResultsService:
                 ExperimentResult.filename == file.filename).first():
             raise HTTPException(status_code=400,
                                 detail="File with this name has already been uploaded for this experiment")
+        # todo experiment exists check
 
         path = upload_file(file, settings.uploads_directory, "results", str(experiment_id))
 
