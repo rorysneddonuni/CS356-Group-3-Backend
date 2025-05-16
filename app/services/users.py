@@ -6,7 +6,7 @@ from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.database.tables.user import UserTable
+from app.database.tables.user import User
 from app.models.user import User
 from app.models.user_input import UserInput
 
@@ -20,8 +20,8 @@ class UsersService:
 
     async def create_user(self, user_input: UserInput, db: AsyncSession) -> User:
         # Check if username or email already exists
-        result = await db.execute(select(UserTable).where(
-            or_(UserTable.username == user_input.username, UserTable.email == user_input.email)))
+        result = await db.execute(select(User).where(
+            or_(User.username == user_input.username, User.email == user_input.email)))
         existing = result.scalars().first()
         if existing:
             if existing.username == user_input.username:
@@ -30,7 +30,7 @@ class UsersService:
                 raise HTTPException(status_code=400, detail="Email already registered")
 
         # Create and save user
-        db_obj = UserTable(**user_input.model_dump(exclude_none=True))
+        db_obj = User(**user_input.model_dump(exclude_none=True))
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
@@ -38,14 +38,14 @@ class UsersService:
         return User.model_validate(db_obj.__dict__)
 
     async def get_user_by_name(self, username: str, db: AsyncSession) -> User:
-        result = await db.execute(select(UserTable).where(UserTable.username == username))
+        result = await db.execute(select(User).where(User.username == username))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
         return User.model_validate(db_obj.__dict__)
 
     async def update_user(self, username: str, user_input: UserInput, db: AsyncSession) -> None:
-        result = await db.execute(select(UserTable).where(UserTable.username == username))
+        result = await db.execute(select(User).where(User.username == username))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
@@ -59,7 +59,7 @@ class UsersService:
         return User.model_validate(db_obj.__dict__)
 
     async def delete_user(self, username: str, db: AsyncSession) -> None:
-        result = await db.execute(select(UserTable).where(UserTable.username == username))
+        result = await db.execute(select(User).where(User.username == username))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
