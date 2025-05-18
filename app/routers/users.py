@@ -5,6 +5,7 @@ from pydantic import Field, StrictStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import Annotated
 
+from app.auth.dependencies import require_role
 from app.database.database import get_db
 from app.models.error import Error
 from app.models.user import User
@@ -31,8 +32,10 @@ async def create_user(user_input: Annotated[
                        500: {"model": Error, "description": "Unexpected error"}, }, summary="Get user by username.",
             response_model_by_alias=True, )
 async def get_user_by_name(
-        username: Annotated[StrictStr, Path(..., description="The username that needs to be fetched")],
-        db: AsyncSession = Depends(get_db), ) -> User:
+    username: Annotated[str, Path(..., description="The username that needs to be fetched")],
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_role(["admin"]))
+) -> User:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
     return await UsersService.subclasses[0]().get_user_by_name(username, db)

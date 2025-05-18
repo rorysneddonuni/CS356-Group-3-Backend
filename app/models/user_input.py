@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import pprint
-from typing import Any, ClassVar, Dict, List, Optional
+from typing import Any, ClassVar, Dict, List, Optional, Literal
 
 from pydantic import BaseModel, Field, StrictStr
 
@@ -21,7 +21,8 @@ class UserInput(BaseModel):
     last_name: Optional[StrictStr] = Field(default=None, alias="lastName")
     email: Optional[StrictStr] = None
     password: Optional[StrictStr] = None
-    __properties: ClassVar[List[str]] = ["username", "firstName", "lastName", "email", "password"]
+    role: Optional[Literal["user", "admin", "superadmin"]] = "user"
+    __properties: ClassVar[List[str]] = ["id", "username", "firstName", "lastName", "email", "password", "role"]
 
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
 
