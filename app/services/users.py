@@ -1,14 +1,21 @@
+import logging
 from typing import ClassVar, Tuple
 
 from fastapi import HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import Response
 from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.inspection import inspect
+from passlib.context import CryptContext
+import enum
 
-from app.database.tables.user import User
+from app.database.tables.user import User as user_table
 from app.models.user import User
 from app.models.user_input import UserInput
+
+logger = logging.getLogger(__name__)
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
 class UsersService:
@@ -18,58 +25,76 @@ class UsersService:
         super().__init_subclass__(**kwargs)
         UsersService.subclasses += (cls,)
 
+    def safe_dict(self, obj):
+        return {
+            c.key: getattr(obj, c.key).value if isinstance(getattr(obj, c.key), enum.Enum) else getattr(obj, c.key)
+            for c in inspect(obj).mapper.column_attrs
+        }
+
     async def create_user(self, user_input: UserInput, db: AsyncSession) -> User:
-        # Check if username or email already exists
-        result = await db.execute(select(User).where(
-            or_(User.username == user_input.username, User.email == user_input.email)))
+        logger.info(f"Creating user: {user_input.username}")
+        result = await db.execute(select(user_table).where(
+            or_(user_table.username == user_input.username, user_table.email == user_input.email)))
         existing = result.scalars().first()
         if existing:
             if existing.username == user_input.username:
                 raise HTTPException(status_code=400, detail="Username already exists")
-            else:
-                raise HTTPException(status_code=400, detail="Email already registered")
+            raise HTTPException(status_code=400, detail="Email already registered")
 
-        # Create and save user
-        db_obj = User(**user_input.model_dump(exclude_none=True))
+        user_data = user_input.model_dump(exclude_none=True)
+        user_data["password"] = pwd_context.hash(user_data["password"])  # hash password
+        db_obj = user_table(**user_data)
+
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
-
-        return User.model_validate(db_obj.__dict__)
+        return User.model_validate(self.safe_dict(db_obj))
 
     async def get_user_by_name(self, username: str, db: AsyncSession) -> User:
-        result = await db.execute(select(User).where(User.username == username))
+        logger.info(f"Retrieving user: {username}")
+        result = await db.execute(select(user_table).where(user_table.username == username))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
-        return User.model_validate(db_obj.__dict__)
+        return User.model_validate(self.safe_dict(db_obj))
 
-    async def update_user(self, username: str, user_input: UserInput, db: AsyncSession) -> None:
-        result = await db.execute(select(User).where(User.username == username))
+    async def get_user_by_email(self, email: str, db: AsyncSession) -> User:
+        logger.info(f"Retrieving user by email: {email}")
+        result = await db.execute(select(user_table).where(user_table.email == email))
+        db_obj = result.scalars().first()
+        if not db_obj:
+            raise HTTPException(status_code=404, detail="User not found")
+        return User.model_validate(self.safe_dict(db_obj))
+
+    async def update_user(self, username: str, user_input: UserInput, db: AsyncSession) -> User:
+        logger.info(f"Updating user: {username}")
+        result = await db.execute(select(user_table).where(user_table.username == username))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
 
         updates = user_input.model_dump(exclude_none=True)
+        if "password" in updates:
+            updates["password"] = pwd_context.hash(updates["password"])
         for field, value in updates.items():
             setattr(db_obj, field, value)
 
         db.add(db_obj)
         await db.commit()
-        return User.model_validate(db_obj.__dict__)
+        await db.refresh(db_obj)
+        return User.model_validate(self.safe_dict(db_obj))
 
-    async def delete_user(self, username: str, db: AsyncSession) -> None:
-        result = await db.execute(select(User).where(User.username == username))
+    async def delete_user(self, username: str, db: AsyncSession) -> Response:
+        logger.info(f"Deleting user: {username}")
+        result = await db.execute(select(user_table).where(user_table.username == username))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
 
         await db.delete(db_obj)
         await db.commit()
-        return JSONResponse(status_code=200, content={"message": "User deleted"})
+        return Response(status_code=204)
 
 
-# Register the concrete implementation so that
-# UsersService.subclasses[0] is this one:
 class SqliteUsersService(UsersService):
     pass

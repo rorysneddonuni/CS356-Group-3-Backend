@@ -19,21 +19,23 @@ tags:
   name: encoders
 - description: Operations related to networks in the Infrastructure Portal
   name: networks
+- name: auth
+  description: Authentication related operations
 paths:
   /experiments:
     get:
       description: List experiments for a given user.
       operationId: getExperiments
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Experiment'
           description: Successful operation
-        "400":
+        '400':
           description: Invalid request
-        "422":
+        '422':
           description: Validation exception
         default:
           content:
@@ -50,15 +52,15 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/Experiment'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Experiment'
           description: Successful operation
-        "400":
+        '400':
           description: Invalid input
-        "422":
+        '422':
           description: Validation exception
         default:
           content:
@@ -83,9 +85,9 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        '200':
           description: Experiment deleted
-        "400":
+        '400':
           description: Invalid experiment value
         default:
           content:
@@ -109,13 +111,13 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Experiment'
           description: Successful operation
-        "400":
+        '400':
           description: Invalid status value
         default:
           content:
@@ -141,11 +143,11 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/Experiment'
       responses:
-        "200":
+        '200':
           description: successful operation
-        "400":
+        '400':
           description: bad request
-        "404":
+        '404':
           description: experiment not found
         default:
           content:
@@ -170,13 +172,13 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExperimentStatus'
           description: Experiment status retrieved successfully.
-        "404":
+        '404':
           content:
             application/json:
               schema:
@@ -205,9 +207,9 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        '200':
           description: Successful operation
-        "400":
+        '400':
           description: Invalid status value
         default:
           content:
@@ -238,7 +240,7 @@ paths:
               $ref: '#/components/schemas/UploadResults'
         description: Results to upload along with metadata
       responses:
-        "200":
+        '200':
           description: Successful operation
         default:
           content:
@@ -257,7 +259,7 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/User'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -286,11 +288,11 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        '200':
           description: User deleted
-        "400":
+        '400':
           description: Invalid username supplied
-        "404":
+        '404':
           description: User not found
         default:
           content:
@@ -314,15 +316,15 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
           description: Successful operation
-        "400":
+        '400':
           description: Invalid username supplied
-        "404":
+        '404':
           description: User not found
         default:
           content:
@@ -348,11 +350,11 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/User'
       responses:
-        "200":
+        '200':
           description: Successful operation
-        "400":
+        '400':
           description: Bad request
-        "404":
+        '404':
           description: User not found
         default:
           content:
@@ -368,7 +370,7 @@ paths:
       description: Fetch a list of all available videos.
       operationId: getVideos
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -392,25 +394,25 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/Video'
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Video'
           description: Video created successfully
-        "400":
+        '400':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
           description: Invalid video upload data
-        "415":
+        '415':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
           description: Unsupported media type for video upload.
-        "422":
+        '422':
           content:
             application/json:
               schema:
@@ -438,13 +440,13 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Video'
           description: Video deleted
-        "404":
+        '404':
           content:
             application/json:
               schema:
@@ -471,13 +473,13 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Video'
           description: Video details
-        "404":
+        '404':
           content:
             application/json:
               schema:
@@ -497,7 +499,7 @@ paths:
       description: Fetch a list of all encoders.
       operationId: getEncoders
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -520,9 +522,9 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/Encoder'
       responses:
-        "200":
+        '200':
           description: Encoder created
-        "400":
+        '400':
           content:
             application/json:
               schema:
@@ -550,13 +552,13 @@ paths:
           type: integer
         style: simple
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Encoder'
           description: Encoder deleted
-        "404":
+        '404':
           content:
             application/json:
               schema:
@@ -583,13 +585,13 @@ paths:
           type: integer
         style: simple
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Encoder'
           description: Encoder details
-        "404":
+        '404':
           content:
             application/json:
               schema:
@@ -618,15 +620,15 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/Encoder'
       responses:
-        "200":
+        '200':
           description: Encoder updated
-        "400":
+        '400':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
           description: Invalid payload
-        "404":
+        '404':
           content:
             application/json:
               schema:
@@ -646,7 +648,7 @@ paths:
       description: Fetch a list of all networks.
       operationId: getNetworks
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
@@ -669,9 +671,9 @@ paths:
       requestBody:
         $ref: '#/components/requestBodies/Network'
       responses:
-        "200":
+        '200':
           description: Network created
-        "400":
+        '400':
           content:
             application/json:
               schema:
@@ -699,13 +701,13 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Network'
           description: Network deleted
-        "404":
+        '404':
           content:
             application/json:
               schema:
@@ -732,13 +734,13 @@ paths:
           type: string
         style: simple
       responses:
-        "200":
+        '200':
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Network'
           description: Network details
-        "404":
+        '404':
           content:
             application/json:
               schema:
@@ -753,6 +755,35 @@ paths:
       summary: Retrieve network
       tags:
       - networks
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate a user with username and password
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Unauthorized - invalid credentials
+        default:
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      tags:
+      - auth
+      security: []
 components:
   requestBodies:
     Experiment:
@@ -791,7 +822,7 @@ components:
         networkConditions:
           delay: 50ms
           packetLoss: 2%
-        createdAt: 2024-04-01T10:00:00Z
+        createdAt: 2024-04-01 10:00:00+00:00
         metricsRequested:
         - PSNR
         - PSNR
@@ -840,7 +871,7 @@ components:
           title: status
           type: string
         createdAt:
-          example: 2024-04-01T10:00:00Z
+          example: 2024-04-01 10:00:00+00:00
           format: date-time
           title: createdAt
           type: string
@@ -910,7 +941,7 @@ components:
       example:
         firstName: John
         lastName: James
-        password: "12345"
+        password: '12345'
         id: 10
         email: john@email.com
         username: theUser
@@ -937,16 +968,24 @@ components:
           title: email
           type: string
         password:
-          example: "12345"
+          example: '12345'
           title: password
           type: string
+        role:
+          title: role
+          type: string
+          enum:
+          - user
+          - admin
+          - superadmin
+          default: user
       title: User
       type: object
     UserInput:
       example:
         firstName: John
         lastName: James
-        password: "12345"
+        password: '12345'
         email: john@email.com
         username: theUser
       properties:
@@ -967,9 +1006,17 @@ components:
           title: email
           type: string
         password:
-          example: "12345"
+          example: '12345'
           title: password
           type: string
+        role:
+          title: role
+          type: string
+          enum:
+          - user
+          - admin
+          - superadmin
+          default: user
       title: UserInput
       type: object
     Error:
@@ -991,9 +1038,9 @@ components:
     Video:
       example:
         frameRate: frameRate
-        createdDate: 2000-01-23T04:56:07.000+00:00
+        createdDate: 2000-01-23 04:56:07+00:00
         id: id
-        video: ""
+        video: ''
         resolution: resolution
       properties:
         id:
@@ -1020,8 +1067,8 @@ components:
         name: name
         encoderCode: encoderCode
         layers:
-        - ""
-        - ""
+        - ''
+        - ''
         id: 0
         encoderType: encoderType
       properties:
@@ -1050,8 +1097,8 @@ components:
         name: name
         encoderCode: encoderCode
         layers:
-        - ""
-        - ""
+        - ''
+        - ''
         id: 0
         encoderType: encoderType
       properties:
@@ -1179,3 +1226,26 @@ components:
             type: string
           type: array
       type: object
+    LoginRequest:
+      type: object
+      required:
+      - username
+      - password
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          description: JWT token to be used in Authorization header
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+- bearerAuth: []
