@@ -3,18 +3,14 @@ from fastapi import (
     Body,
     Depends,
     HTTPException,
-    status,
 )
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from typing import Any
-
+from app.database.database import get_db
+from app.models.error import Error
 from app.models.login_request import LoginRequest
 from app.models.login_response import LoginResponse
-from app.models.error import Error
 from app.services.auth import AuthService
-from app.database.database import get_db
 
 router = APIRouter()
 

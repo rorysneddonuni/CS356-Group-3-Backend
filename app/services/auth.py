@@ -1,21 +1,16 @@
+from datetime import datetime, timedelta
 from typing import ClassVar, Tuple, Optional
 
-from fastapi import HTTPException, status, Depends
-from datetime import datetime, timedelta
-
-from fastapi.security import OAuth2PasswordBearer
-from passlib.context import CryptContext
 import jwt
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import HTTPException, status
+from passlib.context import CryptContext
 
-from app.database.database import get_db
+from app.auth.config import ALGORITHM, SECRET_KEY
 from app.models.login_request import LoginRequest
 from app.models.login_response import LoginResponse
-from app.services.users import SqliteUsersService
 from app.models.user import User
+from app.services.users import SqliteUsersService
 
-SECRET_KEY = "super-secret-key"
-ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 

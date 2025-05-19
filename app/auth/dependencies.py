@@ -1,18 +1,14 @@
-from typing import List, Callable
-
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.config import SECRET_KEY, ALGORITHM
 from app.database.database import get_db
 from app.models.user import User
 from app.services.users import SqliteUsersService
 
-SECRET_KEY = "super-secret-key"
-ALGORITHM = "HS256"
-
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login_form")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="auth/login")
 
 async def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -20,7 +16,7 @@ async def get_current_user(
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Invalid token",
+        detail="Invalid token, please regenerate using auth endpoint",
     )
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
@@ -44,6 +40,6 @@ def require_role(allowed_roles: list[str]):
     def checker(user: User = Depends(get_current_user)):
         if user.role not in allowed_roles:
             print(user.role)
-            raise HTTPException(status_code=403, detail="Forbidden")
+            raise HTTPException(status_code=403, detail=f"Invalid access level, {str(allowed_roles)} required! ")
         return user
     return checker
