@@ -1,5 +1,5 @@
 import logging
-from typing import ClassVar, Tuple
+from typing import ClassVar, Tuple, List
 
 from fastapi import HTTPException
 from fastapi.responses import Response
@@ -42,7 +42,7 @@ class UsersService:
             raise HTTPException(status_code=400, detail="Email already registered")
 
         user_data = user_input.model_dump(exclude_none=True)
-        user_data["password"] = pwd_context.hash(user_data["password"])  # hash password
+        user_data["password"] = pwd_context.hash(user_data["password"])
         db_obj = user_table(**user_data)
 
         db.add(db_obj)
@@ -66,6 +66,25 @@ class UsersService:
             raise HTTPException(status_code=404, detail="User not found")
         return User.model_validate(self.safe_dict(db_obj))
 
+    async def get_user_by_id(self, user_id: int, db: AsyncSession) -> User:
+        logger.info(f"Retrieving user by id: {user_id}")
+        result = await db.execute(select(user_table).where(user_table.id == user_id))
+        db_obj = result.scalars().first()
+        if not db_obj:
+            raise HTTPException(status_code=404, detail="User not found")
+        return User.model_validate(self.safe_dict(db_obj))
+
+    async def get_all_users(self, db: AsyncSession) -> List[User]:
+        logger.info("Retrieving all users")
+        result = await db.execute(select(user_table))
+        db_objs = result.scalars().all()
+        users: List[User] = []
+        for obj in db_objs:
+            data = self.safe_dict(obj)
+            data.pop("password", None)
+            users.append(User.model_validate(data))
+        return users
+
     async def update_user(self, username: str, user_input: UserInput, db: AsyncSession) -> User:
         logger.info(f"Updating user: {username}")
         result = await db.execute(select(user_table).where(user_table.username == username))
@@ -73,11 +92,17 @@ class UsersService:
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
 
-        updates = user_input.model_dump(exclude_none=True)
-        if "password" in updates:
-            updates["password"] = pwd_context.hash(updates["password"])
-        for field, value in updates.items():
-            setattr(db_obj, field, value)
+        update_data = user_input.model_dump(exclude_none=True)
+        # Prevent changing immutable fields
+        for field in ("id", "username", "email"):
+            update_data.pop(field, None)
+
+        # Hash password if it's being updated
+        if "password" in update_data:
+            update_data["password"] = pwd_context.hash(update_data["password"])
+
+        for key, value in update_data.items():
+            setattr(db_obj, key, value)
 
         db.add(db_obj)
         await db.commit()
