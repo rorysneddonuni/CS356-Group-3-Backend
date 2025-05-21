@@ -1,21 +1,21 @@
-from typing import List, Optional
+# app/routers/users.py
+
+from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, Path, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
-from pydantic import Field, StrictStr
+from pydantic import StrictStr, Field
 from typing_extensions import Annotated
 
-from app.auth.dependencies import require_role
 from app.database.database import get_db
 from app.models.error import Error
 from app.models.user import User
-from app.models.user_input import UserInput
+from app.models.user_input import CreateUserInput, UpdateUserInput
 from app.services.users import UsersService
 
 router = APIRouter(tags=["users"])
 
-# Create a new user (public)
-# Create a new user (public) — ignore any supplied role
+
 @router.post(
     "/users",
     response_model=User,
@@ -28,19 +28,15 @@ router = APIRouter(tags=["users"])
 )
 async def create_user(
     user_input: Annotated[
-        Optional[UserInput], Field(..., description="User object creation in store")
-    ] = Body(...),
+        CreateUserInput, Body(..., description="Data for new user (role fixed to 'user')")
+    ],
     db: AsyncSession = Depends(get_db),
 ) -> User:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
-    # Strip out any client-supplied role so default 'user' is used
-    data = user_input.model_dump(exclude_none=True)
-    data.pop("role", None)
-    clean_input = UserInput.model_validate(data)
-    return await UsersService.subclasses[0]().create_user(clean_input, db)
+    return await UsersService.subclasses[0]().create_user(user_input, db)
 
-# List all users (public)
+
 @router.get(
     "/users",
     response_model=List[User],
@@ -51,14 +47,12 @@ async def create_user(
     summary="Get all users.",
     response_model_by_alias=True,
 )
-async def get_all_users(
-    db: AsyncSession = Depends(get_db),
-) -> List[User]:
+async def get_all_users(db: AsyncSession = Depends(get_db)) -> List[User]:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
     return await UsersService.subclasses[0]().get_all_users(db)
 
-# Retrieve a user by username (public)
+
 @router.get(
     "/users/{username}",
     response_model=User,
@@ -71,14 +65,14 @@ async def get_all_users(
     response_model_by_alias=True,
 )
 async def get_user_by_username(
-    username: Annotated[str, Path(..., description="The username that needs to be fetched")],
+    username: Annotated[str, Path(..., description="The username to fetch")],
     db: AsyncSession = Depends(get_db),
 ) -> User:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
     return await UsersService.subclasses[0]().get_user_by_name(username, db)
 
-# Retrieve a user by user ID (public)
+
 @router.get(
     "/users/id/{user_id}",
     response_model=User,
@@ -91,14 +85,14 @@ async def get_user_by_username(
     response_model_by_alias=True,
 )
 async def get_user_by_id(
-    user_id: Annotated[int, Path(..., description="The ID of the user to fetch")],
+    user_id: Annotated[int, Path(..., description="The user ID to fetch")],
     db: AsyncSession = Depends(get_db),
 ) -> User:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
     return await UsersService.subclasses[0]().get_user_by_id(user_id, db)
 
-# Retrieve a user by email (public)
+
 @router.get(
     "/users/email/{email}",
     response_model=User,
@@ -111,20 +105,19 @@ async def get_user_by_id(
     response_model_by_alias=True,
 )
 async def get_user_by_email(
-    email: Annotated[str, Path(..., description="The email address of the user to fetch")],
+    email: Annotated[str, Path(..., description="The email to fetch")],
     db: AsyncSession = Depends(get_db),
 ) -> User:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
     return await UsersService.subclasses[0]().get_user_by_email(email, db)
 
-# Update a user (self only)
+
 @router.put(
-    "/users/{username}",
+    "/users/{user_id}",
     response_model=User,
     responses={
         200: {"model": User, "description": "Successful operation"},
-        403: {"description": "Forbidden"},
         404: {"description": "User not found"},
         500: {"model": Error, "description": "Unexpected error"},
     },
@@ -132,23 +125,19 @@ async def get_user_by_email(
     response_model_by_alias=True,
 )
 async def update_user(
-    username: Annotated[StrictStr, Path(..., description="The username to update")],
+    user_id: Annotated[int, Path(..., description="The user ID to update")],
     user_input: Annotated[
-        Optional[UserInput], Body(..., description="User object creation and update in store")
+        UpdateUserInput, Body(..., description="Fields to update; role allowed if needed")
     ],
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role(["user", "admin", "superadmin"]))
 ) -> User:
-    # Allow normal users to update only their own record
-    if current_user.role == "user" and current_user.username != username:
-        raise HTTPException(status_code=403, detail="Users can only update their own profile")
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
-    return await UsersService.subclasses[0]().update_user(username, user_input, db)
+    return await UsersService.subclasses[0]().update_user(user_id, user_input, db)
 
-# Delete a user (admin & superadmin only)
+
 @router.delete(
-    "/users/{username}",
+    "/users/{user_id}",
     responses={
         204: {"description": "User deleted"},
         404: {"description": "User not found"},
@@ -158,10 +147,9 @@ async def update_user(
     response_model_by_alias=True,
 )
 async def delete_user(
-    username: Annotated[StrictStr, Path(..., description="The username to delete")],
+    user_id: Annotated[int, Path(..., description="The user ID to delete")],
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_role(["admin", "superadmin"]))
 ) -> None:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
-    await UsersService.subclasses[0]().delete_user(username, db)
+    await UsersService.subclasses[0]().delete_user(user_id, db)
