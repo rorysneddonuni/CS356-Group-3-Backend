@@ -127,13 +127,15 @@ async def get_user_by_email(
 async def update_user(
     user_id: Annotated[int, Path(..., description="The user ID to update")],
     user_input: Annotated[
-        UpdateUserInput, Body(..., description="Fields to update; role allowed if needed")
+        UpdateUserInput,
+        Body(..., description="Fields to update; only the provided fields will change")
     ],
     db: AsyncSession = Depends(get_db),
 ) -> User:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
     return await UsersService.subclasses[0]().update_user(user_id, user_input, db)
+
 
 
 @router.delete(

@@ -18,12 +18,12 @@ class User(BaseModel):
     """  # noqa: E501
     id: Optional[StrictInt] = None
     username: Optional[StrictStr] = None
-    first_name: Optional[StrictStr] = Field(default=None, alias="firstName")
-    last_name: Optional[StrictStr] = Field(default=None, alias="lastName")
+    first_name: Optional[StrictStr] = Field(default=None, alias="first_name")
+    last_name: Optional[StrictStr] = Field(default=None, alias="last_name")
     email: Optional[StrictStr] = None
     password: Optional[StrictStr] = None
     role: Optional[Literal["user", "admin", "superadmin"]] = "user"
-    __properties: ClassVar[List[str]] = ["id", "username", "firstName", "lastName", "email", "password", "role"]
+    __properties: ClassVar[List[str]] = ["id", "username", "first_name", "last_name", "email", "password", "role"]
 
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
 
@@ -64,6 +64,6 @@ class User(BaseModel):
             return cls.model_validate(obj)
 
         _obj = cls.model_validate(
-            {"id": obj.get("id"), "username": obj.get("username"), "firstName": obj.get("firstName"),
-             "lastName": obj.get("lastName"), "email": obj.get("email"), "password": obj.get("password")})
+            {"id": obj.get("id"), "username": obj.get("username"), "first_name": obj.get("first_name"),
+             "last_name": obj.get("last_name"), "email": obj.get("email"), "password": obj.get("password")})
         return _obj

@@ -18,12 +18,12 @@ class CreateUserInput(BaseModel):
     Excludes `role` to prevent clients from setting it manually.
     """
     username: StrictStr = Field(..., description="Unique username, 50 characters max")
-    first_name: StrictStr = Field(..., alias="firstName", description="User's first name")
-    last_name: StrictStr = Field(..., alias="lastName", description="User's last name")
+    first_name: StrictStr = Field(..., alias="first_name", description="User's first name")
+    last_name: StrictStr = Field(..., alias="last_name", description="User's last name")
     email: StrictStr = Field(..., description="Unique email address")
     password: StrictStr = Field(..., description="User password, will be hashed before storage")
 
-    __properties: ClassVar[List[str]] = ["username", "firstName", "lastName", "email", "password"]
+    __properties: ClassVar[List[str]] = ["username", "first_name", "last_name", "email", "password"]
     model_config = {"populate_by_name": True, "validate_assignment": True}
 
     def to_str(self) -> str:
@@ -52,14 +52,14 @@ class UpdateUserInput(BaseModel):
     Allows clients (with sufficient privileges) to update role.
     """
     username: Optional[StrictStr] = None
-    first_name: Optional[StrictStr] = Field(default=None, alias="firstName")
-    last_name: Optional[StrictStr] = Field(default=None, alias="lastName")
+    first_name: Optional[StrictStr] = Field(default=None, alias="first_name")
+    last_name: Optional[StrictStr] = Field(default=None, alias="last_name")
     email: Optional[StrictStr] = None
     password: Optional[StrictStr] = None
-    role: Optional[Literal["user", "admin", "superadmin"]]
+    role: Optional[Literal["user", "admin", "superadmin"]] = None
 
     __properties: ClassVar[List[str]] = [
-        "username", "firstName", "lastName", "email", "password", "role"
+        "username", "first_name", "last_name", "email", "password", "role"
     ]
     model_config = {"populate_by_name": True, "validate_assignment": True}
 
