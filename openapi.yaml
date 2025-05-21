@@ -254,14 +254,14 @@ paths:
       - results
   /users:
     post:
-      description: This can only be done by the superuser.
+      description: Create a user. Role is fixed to “user” and cannot be set by clients.
       operationId: createUser
       requestBody:
-        $ref: '#/components/requestBodies/User'
+        $ref: '#/components/requestBodies/CreateUser'
       responses:
         '200':
           content:
-            application/json:
+            --application/json:
               schema:
                 $ref: '#/components/schemas/User'
           description: Successful operation
@@ -274,40 +274,35 @@ paths:
       summary: Create a user.
       tags:
       - users
-  /users/{username}:
-    delete:
-      description: This can only be done by the logged in user.
-      operationId: deleteUser
-      parameters:
-      - description: The username that needs to be deleted
-        explode: false
-        in: path
-        name: username
-        required: true
-        schema:
-          type: string
-        style: simple
+
+    get:
+      description: Get all users.
+      operationId: getAllUsers
       responses:
         '200':
-          description: User deleted
-        '400':
-          description: Invalid username supplied
-        '404':
-          description: User not found
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: Successful operation
         default:
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
           description: Unexpected error
-      summary: Delete user resource.
+      summary: Get all users.
       tags:
       - users
+
+  /users/{username}:
     get:
-      description: Get uses detail based on username.
-      operationId: getUserByName
+      description: Get user by username.
+      operationId: getUserByUsername
       parameters:
-      - description: The name that needs to be fetched. Use users1 for testing
+      - description: The username to fetch
         explode: false
         in: path
         name: username
@@ -322,8 +317,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/User'
           description: Successful operation
-        '400':
-          description: Invalid username supplied
         '404':
           description: User not found
         default:
@@ -335,25 +328,95 @@ paths:
       summary: Get user by username.
       tags:
       - users
-    put:
-      description: This can only be done by the logged in user or superuser.
-      operationId: updateUser
+
+  /users/id/{user_id}:
+    get:
+      description: Get user by ID.
+      operationId: getUserById
       parameters:
-      - description: name that need to be deleted
+      - description: The user ID to fetch
         explode: false
         in: path
-        name: username
+        name: user_id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Successful operation
+        '404':
+          description: User not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Get user by ID.
+      tags:
+      - users
+
+  /users/email/{email}:
+    get:
+      description: Get user by email.
+      operationId: getUserByEmail
+      parameters:
+      - description: The email address to fetch
+        explode: false
+        in: path
+        name: email
         required: true
         schema:
           type: string
         style: simple
-      requestBody:
-        $ref: '#/components/requestBodies/User'
       responses:
         '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: Successful operation
+        '404':
+          description: User not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Get user by email.
+      tags:
+      - users
+
+  /users/{user_id}:
+    put:
+      description: Update user resource. Only the provided fields will change.
+      operationId: updateUser
+      parameters:
+      - description: The user ID to update
+        explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      requestBody:
+        $ref: '#/components/requestBodies/UpdateUser'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
           description: Successful operation
         '400':
-          description: Bad request
+          description: Invalid input or conflict
         '404':
           description: User not found
         default:
@@ -365,6 +428,34 @@ paths:
       summary: Update user resource.
       tags:
       - users
+
+    delete:
+      description: Delete user resource.
+      operationId: deleteUser
+      parameters:
+      - description: The user ID to delete
+        explode: false
+        in: path
+        name: user_id
+        required: true
+        schema:
+          type: integer
+        style: simple
+      responses:
+        '204':
+          description: User deleted
+        '404':
+          description: User not found
+        default:
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+          description: Unexpected error
+      summary: Delete user resource.
+      tags:
+      - users
+
   /infrastructure/videos:
     get:
       description: Fetch a list of all available videos.
@@ -810,12 +901,21 @@ components:
           schema:
             $ref: '#/components/schemas/EncoderInput'
       description: Encoder object to be added to the store
-    User:
+    CreateUser:
+      description: Payload for creating a new user (role fixed to “user”)
+      required: true
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/UserInput'
-      description: User object creation and update in store
+
+    UpdateUser:
+      description: Payload for updating an existing user (all fields optional)
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UserInput'
   schemas:
     Experiment:
       example:
