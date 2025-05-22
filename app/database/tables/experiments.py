@@ -24,7 +24,7 @@ class Experiment(Base):
     progress = Column(String(250))
     created_at = Column(String(250))
 
-    result_files = relationship("ExperimentResult", back_populates="experiment", cascade="all, delete-orphan")
+    result_files = relationship("ExperimentResult", back_populates="experiment", cascade="all, delete-orphan", lazy="selectin")
 
 
 class ExperimentResult(Base):
