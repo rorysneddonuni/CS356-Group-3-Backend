@@ -65,9 +65,7 @@ class UsersService:
         result = await db.execute(select(user_table))
         users: List[User] = []
         for obj in result.scalars().all():
-            data = self.safe_dict(obj)
-            data.pop("password", None)
-            users.append(User.model_validate(data))
+            users.append(User.model_validate(self.safe_dict(obj)))
         return users
 
     async def get_user_by_name(self, username: str, db: AsyncSession) -> User:
