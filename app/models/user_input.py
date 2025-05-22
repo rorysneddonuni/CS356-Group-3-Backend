@@ -14,55 +14,36 @@ except ImportError:
 
 class UserInput(BaseModel):
     """
-    UserInput
-    """  # noqa: E501
+    Schema for creating or updating a user.
+    All fields optional.
+    """
     username: Optional[StrictStr] = None
-    first_name: Optional[StrictStr] = Field(default=None, alias="firstName")
-    last_name: Optional[StrictStr] = Field(default=None, alias="lastName")
+    first_name: Optional[StrictStr] = Field(default=None, alias="first_name")
+    last_name: Optional[StrictStr] = Field(default=None, alias="last_name")
     email: Optional[StrictStr] = None
     password: Optional[StrictStr] = None
-    role: Optional[Literal["user", "admin", "superadmin"]] = "user"
-    __properties: ClassVar[List[str]] = ["id", "username", "firstName", "lastName", "email", "password", "role"]
+    role: Optional[Literal["user", "admin", "superadmin"]] = None
 
-    model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
+    __properties: ClassVar[List[str]] = [
+        "username", "first_name", "last_name", "email", "password", "role"
+    ]
+    model_config = {"populate_by_name": True, "validate_assignment": True}
 
     def to_str(self) -> str:
-        """Returns the string representation of the model using alias"""
         return pprint.pformat(self.model_dump(by_alias=True))
 
     def to_json(self) -> str:
-        """Returns the JSON representation of the model using alias"""
-        # TODO: pydantic v2: use .model_dump_json(by_alias=True, exclude_unset=True) instead
-        return json.dumps(self.to_dict())
+        return json.dumps(self.model_dump(by_alias=True, exclude_none=True))
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of UserInput from a JSON string"""
-        return cls.from_dict(json.loads(json_str))
+        return cls.model_validate_json(json_str)
 
     def to_dict(self) -> Dict[str, Any]:
-        """Return the dictionary representation of the model using alias.
-
-        This has the following differences from calling pydantic's
-        `self.model_dump(by_alias=True)`:
-
-        * `None` is only added to the output dict for nullable fields that
-          were set at model initialization. Other fields with value `None`
-          are ignored.
-        """
-        _dict = self.model_dump(by_alias=True, exclude={}, exclude_none=True, )
-        return _dict
+        return self.model_dump(by_alias=True, exclude_none=True)
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of UserInput from a dict"""
         if obj is None:
             return None
-
-        if not isinstance(obj, dict):
-            return cls.model_validate(obj)
-
-        _obj = cls.model_validate(
-            {"username": obj.get("username"), "firstName": obj.get("firstName"), "lastName": obj.get("lastName"),
-             "email": obj.get("email"), "password": obj.get("password")})
-        return _obj
+        return cls.model_validate(obj)
