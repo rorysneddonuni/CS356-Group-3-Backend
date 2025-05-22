@@ -12,7 +12,7 @@ import enum
 
 from app.database.tables.user import User as user_table
 from app.models.user import User
-from app.models.user_input import CreateUserInput, UpdateUserInput
+from app.models.user_input import UserInput
 
 logger = logging.getLogger(__name__)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -33,9 +33,9 @@ class UsersService:
             for c in inspect(obj).mapper.column_attrs
         }
 
-    async def create_user(self, user_input: CreateUserInput, db: AsyncSession) -> User:
+    async def create_user(self, user_input: UserInput, db: AsyncSession) -> User:
         logger.info(f"Creating user: {user_input.username}")
-        # ensure uniqueness of username/email
+        # ensure username/email unique
         result = await db.execute(
             select(user_table).where(
                 or_(
@@ -50,7 +50,8 @@ class UsersService:
                 raise HTTPException(status_code=400, detail="Username already exists")
             raise HTTPException(status_code=400, detail="Email already registered")
 
-        data = user_input.model_dump(by_alias=True, exclude_none=True)
+        data = user_input.model_dump(exclude_none=True, by_alias=True)
+        data.pop("role", None)              # ignore any supplied role
         data["password"] = pwd_context.hash(data["password"])
         db_obj = user_table(**data)
 
@@ -58,6 +59,16 @@ class UsersService:
         await db.commit()
         await db.refresh(db_obj)
         return User.model_validate(self.safe_dict(db_obj))
+
+    async def get_all_users(self, db: AsyncSession) -> List[User]:
+        logger.info("Retrieving all users")
+        result = await db.execute(select(user_table))
+        users: List[User] = []
+        for obj in result.scalars().all():
+            data = self.safe_dict(obj)
+            data.pop("password", None)
+            users.append(User.model_validate(data))
+        return users
 
     async def get_user_by_name(self, username: str, db: AsyncSession) -> User:
         logger.info(f"Retrieving user: {username}")
@@ -79,67 +90,39 @@ class UsersService:
             raise HTTPException(status_code=404, detail="User not found")
         return User.model_validate(self.safe_dict(db_obj))
 
-    async def get_user_by_id(self, user_id: int, db: AsyncSession) -> User:
-        logger.info(f"Retrieving user by id: {user_id}")
+    async def update_user(self, username: str, user_input: UserInput, db: AsyncSession) -> User:
+        logger.info(f"Updating user: {username}")
         result = await db.execute(
-            select(user_table).where(user_table.id == user_id)
-        )
-        db_obj = result.scalars().first()
-        if not db_obj:
-            raise HTTPException(status_code=404, detail="User not found")
-        return User.model_validate(self.safe_dict(db_obj))
-
-    async def get_all_users(self, db: AsyncSession) -> List[User]:
-        logger.info("Retrieving all users")
-        result = await db.execute(select(user_table))
-        db_objs = result.scalars().all()
-        users: List[User] = []
-        for obj in db_objs:
-            data = self.safe_dict(obj)
-            data.pop("password", None)
-            users.append(User.model_validate(data))
-        return users
-
-    async def update_user(
-            self, user_id: int, user_input: UpdateUserInput, db: AsyncSession
-    ) -> User:
-        logger.info(f"Updating user ID: {user_id}")
-        result = await db.execute(
-            select(user_table).where(user_table.id == user_id)
+            select(user_table).where(user_table.username == username)
         )
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="User not found")
 
-        update_data = user_input.model_dump(by_alias=True, exclude_none=True)
+        update_data = user_input.model_dump(exclude_none=True, by_alias=True)
 
-        # check for username change & uniqueness
-        if "username" in update_data and update_data["username"] != db_obj.username:
+        # username conflict?
+        if "username" in update_data and update_data["username"] != username:
             dup = await db.execute(
                 select(user_table).where(
-                    user_table.username == update_data["username"],
-                    user_table.id != user_id,
+                    user_table.username == update_data["username"]
                 )
             )
             if dup.scalars().first():
                 raise HTTPException(status_code=400, detail="Username already exists")
-
-        # check for email change & uniqueness
+        # email conflict?
         if "email" in update_data and update_data["email"] != db_obj.email:
             dup = await db.execute(
                 select(user_table).where(
-                    user_table.email == update_data["email"],
-                    user_table.id != user_id,
+                    user_table.email == update_data["email"]
                 )
             )
             if dup.scalars().first():
                 raise HTTPException(status_code=400, detail="Email already registered")
 
-        # hash new password if present
         if "password" in update_data:
             update_data["password"] = pwd_context.hash(update_data["password"])
 
-        # apply updates
         for key, val in update_data.items():
             setattr(db_obj, key, val)
 
@@ -148,10 +131,10 @@ class UsersService:
         await db.refresh(db_obj)
         return User.model_validate(self.safe_dict(db_obj))
 
-    async def delete_user(self, user_id: int, db: AsyncSession) -> Response:
-        logger.info(f"Deleting user ID: {user_id}")
+    async def delete_user(self, username: str, db: AsyncSession) -> Response:
+        logger.info(f"Deleting user: {username}")
         result = await db.execute(
-            select(user_table).where(user_table.id == user_id)
+            select(user_table).where(user_table.username == username)
         )
         db_obj = result.scalars().first()
         if not db_obj:
@@ -160,6 +143,7 @@ class UsersService:
         await db.delete(db_obj)
         await db.commit()
         return Response(status_code=204)
+
 
 class SqliteUsersService(UsersService):
     pass
