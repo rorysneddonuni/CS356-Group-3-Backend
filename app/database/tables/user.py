@@ -4,6 +4,7 @@ import enum
 from app.database.database import Base
 
 class UserRole(enum.Enum):
+    unauthorised = 'unauthorised'
     user = "user"
     admin = "admin"
     superadmin = "superadmin"
@@ -18,4 +19,4 @@ class User(Base):
     last_name = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password = Column(String(128), nullable=False)
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.user)
+    role = Column(Enum(UserRole), nullable=False, default=UserRole.unauthorised)
