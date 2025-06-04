@@ -38,7 +38,6 @@ async def create_user(
         raise HTTPException(status_code=501, detail="Not implemented")
     # enforce default role
     data = user_input.model_dump(exclude_none=True, by_alias=True)
-    data["role"] = "user"
     clean = UserInput.model_validate(data)
     return await UsersService.subclasses[0]().create_user(clean, db)
 
