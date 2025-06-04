@@ -5,7 +5,7 @@ import pprint
 from datetime import datetime
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
-from pydantic import BaseModel, Field, StrictBytes, StrictStr
+from pydantic import BaseModel, Field, StrictInt, StrictStr
 
 try:
     from typing import Self
@@ -17,12 +17,16 @@ class Video(BaseModel):
     """
     Video
     """  # noqa: E501
-    id: Optional[StrictStr] = None
-    video: Optional[Union[StrictBytes, StrictStr, Tuple[StrictStr, StrictBytes]]] = None
-    frame_rate: Optional[StrictStr] = Field(default=None, alias="frameRate")
+    id: Optional[StrictInt] = None
+    groupId: Optional[StrictInt] = None
+    filename: Optional[StrictStr] = None
+    path: Optional[StrictStr] = None
+    video_type: Optional[StrictStr] = None
+    frame_rate: Optional[StrictInt] = Field(default=None, alias="frameRate")
     resolution: Optional[StrictStr] = None
-    created_date: Optional[datetime] = Field(default=None, alias="createdDate")
-    __properties: ClassVar[List[str]] = ["id", "video", "frameRate", "resolution", "createdDate"]
+    created_date: Optional[StrictStr] = Field(default=None, alias="createdDate")
+    __properties: ClassVar[List[str]] = ["id", "groupId", "filename", "path", "videoType", "frameRate", "resolution", "createdDate"]
+
 
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
 
@@ -62,6 +66,6 @@ class Video(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        _obj = cls.model_validate({"id": obj.get("id"), "video": obj.get("video"), "frameRate": obj.get("frameRate"),
+        _obj = cls.model_validate({"id": obj.get("id"), "groupId": obj.get("groupId"), "videoPath": obj.get("videoPath"), "frameRate": obj.get("frameRate"),
                                    "resolution": obj.get("resolution"), "createdDate": obj.get("createdDate")})
         return _obj
