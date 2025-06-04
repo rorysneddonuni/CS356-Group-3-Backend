@@ -1,10 +1,11 @@
 from typing import List
 
 from fastapi import APIRouter, Body, HTTPException, Path, Depends
+from pydantic import StrictStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import Annotated
-from pydantic import Field, StrictStr
 
+from app.auth.dependencies import require_minimum_role, get_current_user, has_access_to_user
 from app.database.database import get_db
 from app.models.error import Error
 from app.models.user import User
@@ -38,7 +39,6 @@ async def create_user(
         raise HTTPException(status_code=501, detail="Not implemented")
     # enforce default role
     data = user_input.model_dump(exclude_none=True, by_alias=True)
-    data["role"] = "user"
     clean = UserInput.model_validate(data)
     return await UsersService.subclasses[0]().create_user(clean, db)
 
@@ -53,10 +53,19 @@ async def create_user(
     summary="Get all users.",
     response_model_by_alias=True,
 )
-async def get_all_users(db: AsyncSession = Depends(get_db)) -> List[User]:
+async def get_all_users(current_user: User = Depends(require_minimum_role("user")),
+                        db: AsyncSession = Depends(get_db)) -> List[User]:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
-    return await UsersService.subclasses[0]().get_all_users(db)
+
+    service = UsersService.subclasses[0]()
+
+    if current_user.role == "user":
+        # Just return their own data in a list
+        user = await service.get_user_by_name(current_user.username, db)
+        return [user] if user else []
+
+    return await service.get_all_users(db)
 
 
 @router.get(
@@ -73,7 +82,10 @@ async def get_all_users(db: AsyncSession = Depends(get_db)) -> List[User]:
 async def get_user_by_username(
     username: Annotated[StrictStr, Path(..., description="The username to fetch")],
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ) -> User:
+    if not has_access_to_user(current_user, username):
+        raise HTTPException(status_code=401, detail="You can only access your own data")
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
     return await UsersService.subclasses[0]().get_user_by_name(username, db)
@@ -98,6 +110,7 @@ async def update_user(
         Body(..., description="Fields to update; only provided fields will change"),
     ],
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_minimum_role("admin")),
 ) -> User:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
@@ -117,6 +130,7 @@ async def update_user(
 async def delete_user(
     username: Annotated[StrictStr, Path(..., description="The username to delete")],
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_minimum_role("super_admin")),
 ) -> None:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")

@@ -1,19 +1,20 @@
 from typing import Optional
 
+from fastapi import APIRouter
 from fastapi import Body
+from fastapi.params import Depends, Path
 from pydantic import Field, StrictStr
+from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
-from app.models.experiment import Experiment
-from app.models.experiment_input import ExperimentInput
-from app.services.experiments import ExperimentsService
-
-from fastapi import APIRouter
-from fastapi.params import Depends, Path
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.auth.dependencies import require_minimum_role
 from app.database.database import get_db
 from app.models.error import Error
+from app.models.experiment import Experiment
+from app.models.experiment_input import ExperimentInput
+from app.models.user import User
+from app.services.experiments import ExperimentsService
 
 router = APIRouter()
 
@@ -23,7 +24,8 @@ router = APIRouter()
                                         422: {"description": "Validation exception"},
                                         200: {"model": Error, "description": "Unexpected error"}, },
              tags=["experiments"], summary="Create a new experiment.", response_model_by_alias=True, )
-async def create_experiment(experiment_input: Annotated[
+async def create_experiment(current_user: User = Depends(require_minimum_role("user")),
+                            experiment_input: Annotated[
     Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")] = Body(None,
                                                                                                                   description="Experiment object that needs to be added to the store"),
                             db: AsyncSession = Depends(get_db)) -> Experiment:
@@ -35,7 +37,7 @@ async def create_experiment(experiment_input: Annotated[
                responses={200: {"description": "Experiment deleted"}, 400: {"description": "Invalid experiment value"},
                           200: {"model": Error, "description": "Unexpected error"}, }, tags=["experiments"],
                summary="Delete an experiment.", response_model_by_alias=True, )
-async def delete_experiment(
+async def delete_experiment(current_user: User = Depends(require_minimum_role("admin")),
         experiment_id: Annotated[StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                                                 description="ID to uniquely identify an experiment."),
         db: AsyncSession = Depends(get_db)) -> JSONResponse:
@@ -48,7 +50,7 @@ async def delete_experiment(
                        400: {"description": "Invalid status value"},
                        200: {"model": Error, "description": "Unexpected error"}, },
             tags=["experiments"], summary="Get experiment by ID.", response_model_by_alias=True, )
-async def get_experiment(
+async def get_experiment(current_user: User = Depends(require_minimum_role("user")),
         experiment_id: Annotated[StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                                                 description="ID to uniquely identify an experiment."),
         db: AsyncSession = Depends(get_db)) -> Experiment:
@@ -61,7 +63,8 @@ async def get_experiment(
                                        422: {"description": "Validation exception"},
                                        200: {"model": Error, "description": "Unexpected error"}, },
             tags=["experiments"], summary="List experiments.", response_model_by_alias=True, )
-async def get_experiments(db: AsyncSession = Depends(get_db)) -> Experiment:
+async def get_experiments(db: AsyncSession = Depends(get_db),
+                          current_user: User = Depends(require_minimum_role("user"))) -> Experiment:
     """List experiments for a given user."""
     return await ExperimentsService().get_experiments("1", db)
 
@@ -71,7 +74,7 @@ async def get_experiments(db: AsyncSession = Depends(get_db)) -> Experiment:
                        404: {"description": "experiment not found"},
                        200: {"model": Error, "description": "Unexpected error"}, }, tags=["experiments"],
             summary="Update an experiment.", response_model_by_alias=True, )
-async def update_experiment(
+async def update_experiment(current_user: User = Depends(require_minimum_role("user")),
         experiment_id: Annotated[StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                                                 description="ID to uniquely identify an experiment."),
         experiment_input: Annotated[Optional[ExperimentInput], Field(

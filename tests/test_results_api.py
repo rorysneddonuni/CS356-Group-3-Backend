@@ -9,12 +9,30 @@ from pydantic import Field, StrictBytes, StrictStr  # noqa: F401
 from sqlalchemy import select, func
 from typing_extensions import Annotated  # noqa: F401
 
+from app.auth.dependencies import get_current_user
 from app.database.tables.experiments import Experiment, ExperimentResult
 from app.models.error import Error  # noqa: F401
+from app.models.user import User
+from app.main import app
+
+
+def mock_user():
+    return User(
+        id=1,
+        username="testuser",
+        password="fake",
+        role="user",
+        email="test@example.com",
+        first_name="Test",
+        last_name="User"
+    )
+
 
 
 @pytest.mark.asyncio
 async def test_upload_results_file_success(client, db, isolate_upload_dir):
+    app.dependency_overrides[get_current_user] = lambda: mock_user()
+
     expected_id = 9000
     exp = Experiment(id=expected_id, name="UploadTest", description="Test upload results", owner_id="1", status="TEST",
                      codec="", bitrate="", resolution="")
@@ -41,6 +59,7 @@ async def test_get_experiment_results(client: TestClient, db, isolate_upload_dir
 
     Get results for an experiment.
     """
+    app.dependency_overrides[get_current_user] = lambda: mock_user()
     expected_id = 9000
     exp = Experiment(id=expected_id, name="UploadTest", description="Test upload results", owner_id="1", status="TEST",
                      codec="", bitrate="", resolution="")
@@ -73,6 +92,7 @@ async def test_get_experiment_results(client: TestClient, db, isolate_upload_dir
 
 @pytest.mark.asyncio
 async def test_upload_duplicate_filename(client, db):
+    app.dependency_overrides[get_current_user] = lambda: mock_user()
     # Create an experiment
     exp = Experiment(name="DuplicateTest", description="Test upload results", owner_id="1", status="TEST", codec="",
                      bitrate="", resolution="")

@@ -977,7 +977,7 @@ components:
           enum:
           - user
           - admin
-          - superadmin
+          - super_admin
           default: user
       title: User
       type: object
@@ -1015,7 +1015,7 @@ components:
           enum:
           - user
           - admin
-          - superadmin
+          - super_admin
           default: user
       title: UserInput
       type: object
