@@ -1,13 +1,15 @@
 from typing import List, Optional, Tuple, Union
 
-from fastapi import APIRouter, Body, Form, HTTPException, Path
+from fastapi import APIRouter, Body, Form, HTTPException, Path, Depends
 from pydantic import Field, StrictBytes, StrictStr
 from typing_extensions import Annotated
 
+from app.auth.dependencies import require_minimum_role
 from app.models.error import Error
 from app.models.experiment import Experiment
 from app.models.experiment_input import ExperimentInput
 from app.models.experiment_status import ExperimentStatus
+from app.models.user import User
 from app.services.experiments import ExperimentsService
 
 router = APIRouter()
@@ -18,7 +20,8 @@ router = APIRouter()
                                         422: {"description": "Validation exception"},
                                         200: {"model": Error, "description": "Unexpected error"}, },
              tags=["experiments"], summary="Create a new experiment.", response_model_by_alias=True, )
-async def create_experiment(experiment_input: Annotated[
+async def create_experiment(current_user: User = Depends(require_minimum_role("user")),
+                            experiment_input: Annotated[
     Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")] = Body(None,
                                                                                                                   description="Experiment object that needs to be added to the store"), ) -> Experiment:
     """Create a new experiment under a given user."""
@@ -29,7 +32,7 @@ async def create_experiment(experiment_input: Annotated[
                responses={200: {"description": "Experiment deleted"}, 400: {"description": "Invalid experiment value"},
                           200: {"model": Error, "description": "Unexpected error"}, }, tags=["experiments"],
                summary="Delete an experiment.", response_model_by_alias=True, )
-async def delete_experiment(
+async def delete_experiment(current_user: User = Depends(require_minimum_role("admin")),
         experiment_id: Annotated[StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                                                 description="ID to uniquely identify an experiment."), ) -> None:
     """Delete an experiment."""
@@ -40,7 +43,7 @@ async def delete_experiment(
                                                       400: {"description": "Invalid status value"},
                                                       200: {"model": Error, "description": "Unexpected error"}, },
             tags=["experiments"], summary="Get experiment by ID.", response_model_by_alias=True, )
-async def get_experiment(
+async def get_experiment(current_user: User = Depends(require_minimum_role("user")),
         experiment_id: Annotated[StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                                                 description="ID to uniquely identify an experiment."), ) -> Experiment:
     """Get full details of an experiment by its unique ID."""
@@ -52,7 +55,7 @@ async def get_experiment(
                        404: {"model": Error, "description": "Experiment not found."},
                        200: {"model": Error, "description": "Unexpected error while retrieving experiment status."}, },
             tags=["experiments"], summary="Get experiment status", response_model_by_alias=True, )
-async def get_experiment_status(
+async def get_experiment_status(current_user: User = Depends(require_minimum_role("user")),
         experiment_id: Annotated[StrictStr, Field(description="Unique ID to identify the experiment.")] = Path(...,
                                                                                                                description="Unique ID to identify the experiment."), ) -> ExperimentStatus:
     """Retrieve the current status and progress of an experiment."""
@@ -64,7 +67,7 @@ async def get_experiment_status(
                                        422: {"description": "Validation exception"},
                                        200: {"model": Error, "description": "Unexpected error"}, },
             tags=["experiments"], summary="List experiments.", response_model_by_alias=True, )
-async def get_experiments() -> Experiment:
+async def get_experiments(current_user: User = Depends(require_minimum_role("user")),) -> Experiment:
     """List experiments for a given user."""
     return await ExperimentsService.subclasses[0]().get_experiments()
 
@@ -74,7 +77,7 @@ async def get_experiments() -> Experiment:
                        404: {"description": "experiment not found"},
                        200: {"model": Error, "description": "Unexpected error"}, }, tags=["experiments"],
             summary="Update an experiment.", response_model_by_alias=True, )
-async def update_experiment(
+async def update_experiment(current_user: User = Depends(require_minimum_role("user")),
         experiment_id: Annotated[StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                                                 description="ID to uniquely identify an experiment."),
         experiment_input: Annotated[Optional[ExperimentInput], Field(
