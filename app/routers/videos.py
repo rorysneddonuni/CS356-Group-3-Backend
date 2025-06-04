@@ -24,15 +24,10 @@ router = APIRouter()
                                                   422: {"model": Error, "description": "Video file validation error."},
                                                   500: {"model": Error, "description": "Unexpected error"}, },
              tags=["videos"], summary="Create video", response_model_by_alias=True, )
-async def create_video(
-        video_file: UploadFile = File(..., description="Video file to upload"),
-        id: Optional[int] = Form(None),
-        groupId: Optional[int] = Form(None),
-        filename: Optional[StrictStr] = Form(None),
-        video_type: Optional[StrictStr] = Form(None),
-        frame_rate: Optional[int] = Form(None),
-        resolution: Optional[StrictStr] = Form(None),
-        db: AsyncSession = Depends(get_db),
+async def create_video(video_file: UploadFile = File(..., description="Video file to upload"),
+        id: Optional[int] = Form(None), groupId: Optional[int] = Form(None), filename: Optional[StrictStr] = Form(None),
+        video_type: Optional[StrictStr] = Form(None), frame_rate: Optional[int] = Form(None),
+        resolution: Optional[StrictStr] = Form(None), db: AsyncSession = Depends(get_db),
         current_user: User = Depends(require_minimum_role("user"))) -> Video:
     """Upload a new video to the infrastructure portal (Super User access required)."""
     return await VideosService().create_video(video_file, id, groupId, filename, video_type, frame_rate, resolution, db)
@@ -56,6 +51,7 @@ async def get_video(id: StrictStr = Path(..., description=""), db: AsyncSession 
                     current_user: User = Depends(require_minimum_role("user"))) -> FileResponse:
     """Fetch a specific video by ID."""
     return await VideosService().get_video(id, db)
+
 
 @router.get("/infrastructure/videos", responses={200: {"model": List[StrictStr], "description": "A list of videos"},
                                                  200: {"model": Error, "description": "Unexpected error"}, },

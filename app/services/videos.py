@@ -27,33 +27,19 @@ class VideosService:
         super().__init_subclass__(**kwargs)
         VideosService.subclasses = VideosService.subclasses + (cls,)
 
-    async def create_video(self, video: UploadFile,
-                           id: Optional[int],
-                           groupId: Optional[int],
-                           filename: Optional[StrictStr],
-                           video_type: Optional[StrictStr],
-                           frame_rate: Optional[int],
-                           resolution: Optional[StrictStr],
-                           db) -> Video:
+    async def create_video(self, video: UploadFile, id: Optional[int], groupId: Optional[int],
+                           filename: Optional[StrictStr], video_type: Optional[StrictStr], frame_rate: Optional[int],
+                           resolution: Optional[StrictStr], db) -> Video:
         """Upload a new video to the infrastructure portal (Super User access required)."""
 
-        result = await db.execute(
-            select(input_video_table).where(or_(input_video_table.id == id)))
+        result = await db.execute(select(input_video_table).where(or_(input_video_table.id == id)))
         existing = result.scalars().first()
         if existing:
             raise HTTPException(status_code=400, detail="Video already exists")
 
         # Create and save experiment
-        data = {
-        "id": id,
-        "groupId": groupId,
-        "filename": filename,
-        "path": path,
-        "video_type": video_type,
-        "frame_rate": frame_rate,
-        "resolution": resolution,
-        "created_date": now.strftime("%m/%d/%Y, %H:%M:%S")
-        }
+        data = {"id": id, "groupId": groupId, "filename": filename, "path": path, "video_type": video_type,
+                "frame_rate": frame_rate, "resolution": resolution, "created_date": now.strftime("%m/%d/%Y, %H:%M:%S")}
 
         db_obj = input_video_table(**data)
         db.add(db_obj)

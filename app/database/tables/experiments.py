@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, JSON
+from sqlalchemy import Column, Integer, String, JSON, Enum
 from sqlalchemy.orm import relationship
 
 from app.database.database import Base
+from app.models.experiment import ExperimentStatus
 
 
 class Experiment(Base):
@@ -14,7 +15,7 @@ class Experiment(Base):
     experiment_name = Column(String(50), unique=True, nullable=False, index=True)
     description = Column(String(250), nullable=False)
     owner_id = Column(String(250), nullable=False)
-    status = Column(String(250), nullable=False)
+    status = Column(Enum(ExperimentStatus))
     video_sources = Column(String(100))  # comma separated list
     encoding_parameters = Column(JSON, nullable=False)
     network_conditions = Column(JSON, nullable=False)

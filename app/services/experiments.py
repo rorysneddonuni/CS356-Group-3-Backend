@@ -11,9 +11,8 @@ from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
 from app.database.tables.experiments import Experiment as experiment_table
-from app.models.experiment import Experiment
+from app.models.experiment import Experiment, ExperimentStatus
 from app.models.experiment_input import ExperimentInput
-from app.models.experiment_status import ExperimentStatus
 from tests.utility.validation import validate_experiment
 
 
@@ -40,7 +39,7 @@ class ExperimentsService:
         data["encoding_parameters"] = json.dumps(data["encoding_parameters"])
         data["network_conditions"] = json.dumps(data["network_conditions"])
         data["owner_id"] = "1"  # todo fix
-        data["status"] = "created"  # status
+        data["status"] = ExperimentStatus.PENDING
         db_obj = experiment_table(**data)
         db.add(db_obj)
         await db.commit()
@@ -63,15 +62,6 @@ class ExperimentsService:
     async def get_experiment(self, experiment_id: Annotated[
         StrictStr, Field(description="ID to uniquely identify an experiment.")],
                              db: AsyncSession) -> Experiment:
-        result = await db.execute(select(experiment_table).where(experiment_table.id == experiment_id))
-        db_obj = result.scalars().first()
-        if not db_obj:
-            raise HTTPException(status_code=404, detail="Experiment not found")
-        return validate_experiment(db_obj)
-
-    async def get_experiment_status(self, experiment_id: Annotated[
-        StrictStr, Field(description="Unique ID to identify the experiment.")],
-                                    db: AsyncSession) -> ExperimentStatus:
         result = await db.execute(select(experiment_table).where(experiment_table.id == experiment_id))
         db_obj = result.scalars().first()
         if not db_obj:
@@ -106,7 +96,7 @@ class ExperimentsService:
         updates["encoding_parameters"] = json.dumps(updates["encoding_parameters"])
         updates["network_conditions"] = json.dumps(updates["network_conditions"])
         updates["owner_id"] = "1"  # todo fix
-        updates["status"] = json.dumps(experiment.status) # status
+        updates["status"] = experiment_input.status
 
         for field, value in updates.items():
             setattr(experiment, field, value)
