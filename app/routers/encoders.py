@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from fastapi import APIRouter, Body, HTTPException, Path, Depends
+from fastapi import APIRouter, Body, Path, Depends
 from pydantic import Field, StrictInt
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
@@ -8,7 +8,6 @@ from typing_extensions import Annotated
 
 from app.auth.dependencies import require_minimum_role
 from app.database.database import get_db
-from app.database.tables.encoders import Encoders
 from app.models.encoder import Encoder
 from app.models.encoder_input import EncoderInput
 from app.models.error import Error

@@ -1,37 +1,23 @@
-import json
 import os
-from io import BytesIO
-from typing import ClassVar
-from typing import List, Optional, Tuple, Union
-
-from dulwich.web import send_file
-from multipart import file_path
-from pydantic import StrictBytes, StrictStr
-
-from pathlib import Path
-
-from sqlalchemy import or_
-from sqlalchemy.sql.annotation import Annotated
-from starlette.responses import JSONResponse, FileResponse, StreamingResponse
-
-from app.database.tables.videos import InputVideo as input_video_table, InputVideo
-from app.models.video import Video
-
+from datetime import datetime
+from typing import List
 from typing import Optional, ClassVar, Tuple
 
 from fastapi import HTTPException, UploadFile
-from pydantic import Field, StrictStr
+from pydantic import StrictStr
+from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from starlette.responses import JSONResponse, FileResponse
 
-from datetime import datetime
-
+from app.database.tables.videos import InputVideo as input_video_table
+from app.models.video import Video
 from tests.utility.validation import validate_video
 
 now = datetime.now()
 path = "app\database\\videos"
 
-from app.services.utility.video_file_handler import delete_video_file, retrieve_video_file, store_video_file
+from app.services.utility.video_file_handler import delete_video_file, store_video_file
 
 
 class VideosService:

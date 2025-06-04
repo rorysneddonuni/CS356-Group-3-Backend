@@ -1,23 +1,18 @@
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional
 
-from fastapi import APIRouter, Form, HTTPException, Path, Depends, UploadFile
-from pydantic import StrictBytes, StrictStr
-from sqlalchemy.sql.annotation import Annotated
-from sqlmodel import Field
-from starlette.responses import JSONResponse, FileResponse, StreamingResponse
+from fastapi import APIRouter
+from fastapi import Form, UploadFile
+from fastapi.params import Depends, Path, File
+from pydantic import StrictStr
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse, FileResponse
 
 from app.auth.dependencies import require_minimum_role
+from app.database.database import get_db
 from app.models.error import Error
 from app.models.user import User
-from app.database.database import get_db
-from app.database.tables.videos import InputVideo
 from app.models.video import Video
 from app.services.videos import VideosService
-
-from fastapi import APIRouter, HTTPException
-from fastapi.params import Depends, Path, Body, File
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.error import Error
 
 router = APIRouter()
 
