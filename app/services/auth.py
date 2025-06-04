@@ -47,24 +47,14 @@ class AuthService(BaseAuthApi):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password"
             )
-
-        iat_int = int(datetime.utcnow().timestamp())
-
+        issued_at = int(datetime.utcnow().timestamp())
         payload = {
             "sub": user.username,
             "role": user.role,
-            "issued_at": iat_int,
+            "issued_at": issued_at,
             "firstname": user.first_name,
             "surname": user.last_name,
             "username": user.username,
         }
         token = self.create_access_token(payload)
-
-        issued_at_dt = datetime.utcnow()
-        return LoginResponse(
-            token=token,
-            issued_at=issued_at_dt,
-            first_name=user.first_name,
-            last_name=user.last_name,
-            username=user.username,
-        )
+        return LoginResponse(token=token)
