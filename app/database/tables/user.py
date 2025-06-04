@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Enum
+from datetime import datetime, timezone
+from sqlalchemy import Column, DateTime, Integer, String, Enum
 import enum
 
 from app.database.database import Base
@@ -20,3 +21,10 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False, index=True)
     password = Column(String(128), nullable=False)
     role = Column(Enum(UserRole), nullable=False, default=UserRole.unauthorised)
+    created_at = Column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+
+

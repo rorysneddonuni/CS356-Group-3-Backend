@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from typing import ClassVar, Tuple, Optional
 
-import jwt
+from jose import jwt
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
 
@@ -30,8 +30,8 @@ class BaseAuthApi:
 
     def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
         to_encode = data.copy()
-        expire = datetime.now() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-        to_encode.update({"exp": expire})
+        expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        to_encode.update({"exp": int(expire.timestamp())})
         return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
     async def login_user(self, login_request: LoginRequest, db) -> LoginResponse:
@@ -47,5 +47,24 @@ class AuthService(BaseAuthApi):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password"
             )
-        token = self.create_access_token({"sub": user.username, "role": user.role})
-        return LoginResponse(token=token)
+
+        iat_int = int(datetime.utcnow().timestamp())
+
+        payload = {
+            "sub": user.username,
+            "role": user.role,
+            "issued_at": iat_int,
+            "firstname": user.first_name,
+            "surname": user.last_name,
+            "username": user.username,
+        }
+        token = self.create_access_token(payload)
+
+        issued_at_dt = datetime.utcnow()
+        return LoginResponse(
+            token=token,
+            issued_at=issued_at_dt,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            username=user.username,
+        )

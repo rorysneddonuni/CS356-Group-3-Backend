@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import pprint
 from typing import Any, ClassVar, Dict, List, Optional, Literal
+from datetime import datetime
 
 from pydantic import BaseModel, Field, StrictInt, StrictStr
 
@@ -9,6 +10,7 @@ try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
+
 
 class User(BaseModel):
     """
@@ -24,11 +26,19 @@ class User(BaseModel):
         exclude=True,
         description="Hashed password (never exposed in responses)"
     )
-    role: Optional[Literal["unauthorised","user", "admin", "superadmin"]] = "user"
+    role: Optional[Literal["unauthorised", "user", "admin", "superadmin"]] = "user"
+    created_at: Optional[datetime] = Field(default=None, alias="createdAt")
 
     __properties: ClassVar[List[str]] = [
-        "id", "username", "firstName", "lastName", "email", "role"
+        "id",
+        "username",
+        "firstName",
+        "lastName",
+        "email",
+        "role",
+        "createdAt",
     ]
+
     model_config = {
         "populate_by_name": True,
         "validate_assignment": True,
