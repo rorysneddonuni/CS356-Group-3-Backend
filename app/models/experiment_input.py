@@ -7,6 +7,7 @@ from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, Field, StrictStr
 
 from app.models.encoding_parameters import EncodingParameters
+from app.models.experiment import ExperimentStatus
 from app.models.network_conditions import NetworkConditions
 
 try:
@@ -25,6 +26,7 @@ class ExperimentInput(BaseModel):
     encoding_parameters: EncodingParameters = Field(alias="encodingParameters")
     network_conditions: NetworkConditions = Field(alias="networkConditions")
     metrics_requested: List[StrictStr] = Field(alias="metricsRequested")
+    status: Optional[ExperimentStatus] = Field(alias="status", default=ExperimentStatus.PENDING)
     __properties: ClassVar[List[str]] = ["experimentName", "description", "videoSources", "encodingParameters",
                                          "networkConditions", "metricsRequested"]
 

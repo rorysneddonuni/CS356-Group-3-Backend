@@ -1,37 +1,23 @@
-import json
 import os
-from io import BytesIO
-from typing import ClassVar
-from typing import List, Optional, Tuple, Union
-
-from dulwich.web import send_file
-from multipart import file_path
-from pydantic import StrictBytes, StrictStr
-
-from pathlib import Path
-
-from sqlalchemy import or_
-from sqlalchemy.sql.annotation import Annotated
-from starlette.responses import JSONResponse, FileResponse, StreamingResponse
-
-from app.database.tables.videos import InputVideo as input_video_table, InputVideo
-from app.models.video import Video
-
+from datetime import datetime
+from typing import List
 from typing import Optional, ClassVar, Tuple
 
 from fastapi import HTTPException, UploadFile
-from pydantic import Field, StrictStr
+from pydantic import StrictStr
+from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from starlette.responses import JSONResponse, FileResponse
 
-from datetime import datetime
-
+from app.database.tables.videos import InputVideo as input_video_table
+from app.models.video import Video
 from tests.utility.validation import validate_video
 
 now = datetime.now()
 path = "app\database\\videos"
 
-from app.services.utility.video_file_handler import delete_video_file, retrieve_video_file, store_video_file
+from app.services.utility.video_file_handler import delete_video_file, store_video_file
 
 
 class VideosService:
@@ -41,33 +27,19 @@ class VideosService:
         super().__init_subclass__(**kwargs)
         VideosService.subclasses = VideosService.subclasses + (cls,)
 
-    async def create_video(self, video: UploadFile,
-                           id: Optional[int],
-                           groupId: Optional[int],
-                           filename: Optional[StrictStr],
-                           video_type: Optional[StrictStr],
-                           frame_rate: Optional[int],
-                           resolution: Optional[StrictStr],
-                           db) -> Video:
+    async def create_video(self, video: UploadFile, id: Optional[int], groupId: Optional[int],
+                           filename: Optional[StrictStr], video_type: Optional[StrictStr], frame_rate: Optional[int],
+                           resolution: Optional[StrictStr], db) -> Video:
         """Upload a new video to the infrastructure portal (Super User access required)."""
 
-        result = await db.execute(
-            select(input_video_table).where(or_(input_video_table.id == id)))
+        result = await db.execute(select(input_video_table).where(or_(input_video_table.id == id)))
         existing = result.scalars().first()
         if existing:
             raise HTTPException(status_code=400, detail="Video already exists")
 
         # Create and save experiment
-        data = {
-        "id": id,
-        "groupId": groupId,
-        "filename": filename,
-        "path": path,
-        "video_type": video_type,
-        "frame_rate": frame_rate,
-        "resolution": resolution,
-        "created_date": now.strftime("%m/%d/%Y, %H:%M:%S")
-        }
+        data = {"id": id, "groupId": groupId, "filename": filename, "path": path, "video_type": video_type,
+                "frame_rate": frame_rate, "resolution": resolution, "created_date": now.strftime("%m/%d/%Y, %H:%M:%S")}
 
         db_obj = input_video_table(**data)
         db.add(db_obj)

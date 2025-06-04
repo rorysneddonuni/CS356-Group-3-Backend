@@ -1,20 +1,16 @@
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional
 
-from fastapi import APIRouter, Form, HTTPException, Path, UploadFile
-from pydantic import StrictBytes, StrictStr
-from sqlalchemy.sql.annotation import Annotated
-from sqlmodel import Field
-from starlette.responses import JSONResponse, FileResponse, StreamingResponse
+from fastapi import APIRouter
+from fastapi import Form, UploadFile
+from fastapi.params import Depends, Path, File
+from pydantic import StrictStr
+from sqlalchemy.ext.asyncio import AsyncSession
+from starlette.responses import JSONResponse, FileResponse
 
 from app.database.database import get_db
-from app.database.tables.videos import InputVideo
+from app.models.error import Error
 from app.models.video import Video
 from app.services.videos import VideosService
-
-from fastapi import APIRouter, HTTPException
-from fastapi.params import Depends, Path, Body, File
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.error import Error
 
 router = APIRouter()
 
@@ -26,15 +22,10 @@ router = APIRouter()
                                                   422: {"model": Error, "description": "Video file validation error."},
                                                   200: {"model": Error, "description": "Unexpected error"}, },
              tags=["videos"], summary="Create video", response_model_by_alias=True, )
-async def create_video(
-        video_file: UploadFile = File(..., description="Video file to upload"),
-        id: Optional[int] = Form(None),
-        groupId: Optional[int] = Form(None),
-        filename: Optional[StrictStr] = Form(None),
-        video_type: Optional[StrictStr] = Form(None),
-        frame_rate: Optional[int] = Form(None),
-        resolution: Optional[StrictStr] = Form(None),
-        db: AsyncSession = Depends(get_db) ) -> Video:
+async def create_video(video_file: UploadFile = File(..., description="Video file to upload"),
+        id: Optional[int] = Form(None), groupId: Optional[int] = Form(None), filename: Optional[StrictStr] = Form(None),
+        video_type: Optional[StrictStr] = Form(None), frame_rate: Optional[int] = Form(None),
+        resolution: Optional[StrictStr] = Form(None), db: AsyncSession = Depends(get_db)) -> Video:
     """Upload a new video to the infrastructure portal (Super User access required)."""
     return await VideosService().create_video(video_file, id, groupId, filename, video_type, frame_rate, resolution, db)
 
@@ -55,6 +46,7 @@ async def delete_video(id: StrictStr = Path(..., description=""), db: AsyncSessi
 async def get_video(id: StrictStr = Path(..., description=""), db: AsyncSession = Depends(get_db)) -> FileResponse:
     """Fetch a specific video by ID."""
     return await VideosService().get_video(id, db)
+
 
 @router.get("/infrastructure/videos", responses={200: {"model": List[StrictStr], "description": "A list of videos"},
                                                  200: {"model": Error, "description": "Unexpected error"}, },

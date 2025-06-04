@@ -7,7 +7,6 @@ from typing_extensions import Annotated
 
 from app.models.experiment import Experiment
 from app.models.experiment_input import ExperimentInput
-from app.models.experiment_status import ExperimentStatus
 from app.services.experiments import ExperimentsService
 
 from fastapi import APIRouter
@@ -55,19 +54,6 @@ async def get_experiment(
         db: AsyncSession = Depends(get_db)) -> Experiment:
     """Get full details of an experiment by its unique ID."""
     return await ExperimentsService().get_experiment(experiment_id, db)
-
-
-@router.get("/experiments/{experiment_id}/status",
-            responses={200: {"model": ExperimentStatus, "description": "Experiment status retrieved successfully."},
-                       404: {"model": Error, "description": "Experiment not found."},
-                       200: {"model": Error, "description": "Unexpected error while retrieving experiment status."}, },
-            tags=["experiments"], summary="Get experiment status", response_model_by_alias=True, )
-async def get_experiment_status(
-        experiment_id: Annotated[StrictStr, Field(description="Unique ID to identify the experiment.")] = Path(...,
-                                                                                                               description="Unique ID to identify the experiment."),
-        db: AsyncSession = Depends(get_db)) -> ExperimentStatus:
-    """Retrieve the current status and progress of an experiment."""
-    return await ExperimentsService().get_experiment_status(experiment_id, db)
 
 
 @router.get("/experiments", responses={200: {"model": Experiment, "description": "Successful operation"},
