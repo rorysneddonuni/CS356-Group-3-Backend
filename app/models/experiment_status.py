@@ -17,7 +17,7 @@ class ExperimentStatus(BaseModel):
     ExperimentStatus
     """  # noqa: E501
     experiment_id: Optional[StrictStr] = Field(default=None, alias="experimentId")
-    status: Optional[StrictStr] = None
+    status: Optional[ExperimentStatus] = None
     progress: Optional[StrictInt] = Field(default=None, description="Progress percentage (0-100)")
     __properties: ClassVar[List[str]] = ["experimentId", "status", "progress"]
 
