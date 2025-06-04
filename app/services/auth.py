@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import ClassVar, Tuple, Optional
 
 import jwt
@@ -47,5 +47,15 @@ class AuthService(BaseAuthApi):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password"
             )
-        token = self.create_access_token({"sub": user.username, "role": user.role})
+        now = datetime.now(timezone.utc)
+        token_data = {
+            "sub": user.username,
+            "role": user.role,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "iat": int(now.timestamp())
+        }
+
+        token = self.create_access_token(token_data)
         return LoginResponse(token=token)

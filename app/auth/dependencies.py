@@ -3,7 +3,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.auth.config import SECRET_KEY, ALGORITHM
+from app.auth.config import SECRET_KEY, ALGORITHM, ROLE_HIERARCHY
 from app.database.database import get_db
 from app.models.user import User
 from app.services.users import SqliteUsersService
@@ -36,10 +36,20 @@ async def get_current_user(
 
     return user
 
-def require_role(allowed_roles: list[str]):
-    def checker(user: User = Depends(get_current_user)):
-        if user.role not in allowed_roles:
-            print(user.role)
-            raise HTTPException(status_code=403, detail=f"Invalid access level, {str(allowed_roles)} required! ")
+def has_access_to_user(requesting_user: User, target_username: str) -> bool:
+    if requesting_user.role in ("admin", "super_admin"):
+        return True
+    return requesting_user.username == target_username
+
+def require_minimum_role(min_role: str):
+    def checker(user: User = Depends(get_current_user)) -> User:
+        user_level = ROLE_HIERARCHY.get(user.role, 0)
+        required_level = ROLE_HIERARCHY.get(min_role, 0)
+
+        if user_level < required_level:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Access denied. '{min_role}' or higher required."
+            )
         return user
     return checker

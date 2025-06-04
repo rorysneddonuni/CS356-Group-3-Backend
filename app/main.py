@@ -46,11 +46,17 @@ def custom_openapi():
         }
     }
 
-    EXCLUDE_PATHS = ["/auth/login"]
+    EXCLUDE_ENDPOINTS = {
+        "/users": ["post"],
+        "/auth/login": ["post"]
+    }
 
     for path, path_item in openapi_schema["paths"].items():
-        if path in EXCLUDE_PATHS:
-            continue
+        if path in EXCLUDE_ENDPOINTS:
+            for method in EXCLUDE_ENDPOINTS[path]:
+                if method in path_item:
+                    continue  # Don't apply auth to excluded methods
+
         for operation in path_item.values():
             operation.setdefault("security", []).append({"BearerAuth": []})
 

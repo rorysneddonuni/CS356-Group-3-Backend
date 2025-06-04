@@ -51,7 +51,6 @@ class UsersService:
             raise HTTPException(status_code=400, detail="Email already registered")
 
         data = user_input.model_dump(exclude_none=True, by_alias=True)
-        data.pop("role", None)              # ignore any supplied role
         data["password"] = pwd_context.hash(data["password"])
         db_obj = user_table(**data)
 
