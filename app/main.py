@@ -38,12 +38,10 @@ def custom_openapi():
         description=app.description,
         routes=app.routes,
     )
-    openapi_schema["components"]["securitySchemes"] = {
-        "BearerAuth": {
-            "type": "http",
-            "scheme": "bearer",
-            "bearerFormat": "JWT"
-        }
+    openapi_schema["components"]["securitySchemes"]["BearerAuth"] = {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
     }
 
     EXCLUDE_ENDPOINTS = {
