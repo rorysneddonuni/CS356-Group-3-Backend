@@ -88,7 +88,7 @@ class ExperimentsService:
         if not experiment:
             raise HTTPException(status_code=404, detail="Experiment not found")
         if not experiment.owner_id == user_id:
-            raise HTTPException(status_code=404, detail="Only the owner of the experiment can update the experiment")
+            raise HTTPException(status_code=400, detail="Only the owner of the experiment can update the experiment")
         updates = experiment_input.model_dump(exclude_none=True)
 
         updates["video_sources"] = json.dumps(updates["video_sources"])

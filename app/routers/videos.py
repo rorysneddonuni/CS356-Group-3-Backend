@@ -25,17 +25,17 @@ router = APIRouter()
                                                   500: {"model": Error, "description": "Unexpected error"}, },
              tags=["videos"], summary="Create video", response_model_by_alias=True, )
 async def create_video(video_file: UploadFile = File(..., description="Video file to upload"),
-        id: Optional[int] = Form(None), groupId: Optional[int] = Form(None), filename: Optional[StrictStr] = Form(None),
-        video_type: Optional[StrictStr] = Form(None), frame_rate: Optional[int] = Form(None),
-        resolution: Optional[StrictStr] = Form(None), db: AsyncSession = Depends(get_db),
-        current_user: User = Depends(require_minimum_role("user"))) -> Video:
+                       id: Optional[int] = Form(None), groupId: Optional[int] = Form(None),
+                       filename: Optional[StrictStr] = Form(None), video_type: Optional[StrictStr] = Form(None),
+                       frame_rate: Optional[int] = Form(None), resolution: Optional[StrictStr] = Form(None),
+                       db: AsyncSession = Depends(get_db),
+                       current_user: User = Depends(require_minimum_role("user"))) -> Video:
     """Upload a new video to the infrastructure portal (Super User access required)."""
     return await VideosService().create_video(video_file, id, groupId, filename, video_type, frame_rate, resolution, db)
 
 
 @router.delete("/infrastructure/videos/{id}", responses={200: {"model": Video, "description": "Video deleted"},
-                                                         404: {"model": Error, "description": "Video not found"},
-                                                         200: {"model": Error, "description": "Unexpected error"}, },
+                                                         404: {"model": Error, "description": "Video not found"}},
                tags=["videos"], summary="Delete video", response_model_by_alias=True, )
 async def delete_video(id: StrictStr = Path(..., description=""), db: AsyncSession = Depends(get_db),
                        current_user: User = Depends(require_minimum_role("super_admin"))) -> JSONResponse:
@@ -44,8 +44,7 @@ async def delete_video(id: StrictStr = Path(..., description=""), db: AsyncSessi
 
 
 @router.get("/infrastructure/videos/{id}", responses={200: {"model": Video, "description": "Video details"},
-                                                      404: {"model": Error, "description": "Video not found"},
-                                                      200: {"model": Error, "description": "Unexpected error"}, },
+                                                      404: {"model": Error, "description": "Video not found"}},
             tags=["videos"], summary="Retrieve video", response_model_by_alias=True, response_class=FileResponse)
 async def get_video(id: StrictStr = Path(..., description=""), db: AsyncSession = Depends(get_db),
                     current_user: User = Depends(require_minimum_role("user"))) -> FileResponse:
@@ -53,10 +52,10 @@ async def get_video(id: StrictStr = Path(..., description=""), db: AsyncSession 
     return await VideosService().get_video(id, db)
 
 
-@router.get("/infrastructure/videos", responses={200: {"model": List[StrictStr], "description": "A list of videos"},
-                                                 200: {"model": Error, "description": "Unexpected error"}, },
-            tags=["videos"], summary="Retrieve videos list", response_model_by_alias=True, )
-async def get_videos(db: AsyncSession = Depends(get_db),
-                     current_user: User = Depends(require_minimum_role("user"))) -> List[Video]:
+@router.get("/infrastructure/videos", responses={200: {"model": List[Video], "description": "A list of videos"},
+                                                 404: {"description": "No videos found"}}, tags=["videos"],
+            summary="Retrieve videos list", response_model_by_alias=True, )
+async def get_videos(db: AsyncSession = Depends(get_db), current_user: User = Depends(require_minimum_role("user"))) -> \
+        List[Video]:
     """Fetch a list of all available videos."""
     return await VideosService().get_videos(db)

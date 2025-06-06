@@ -18,12 +18,12 @@ router = APIRouter()
 
 
 @router.post("/infrastructure/encoders", responses={200: {"description": "Encoder created"},
-                                                    400: {"model": Error, "description": "Invalid payload"},
-                                                    200: {"model": Error, "description": "Unexpected error"}, },
-             tags=["encoders"], summary="Create encoder", response_model_by_alias=True, )
+                                                    400: {"model": Error, "description": "Encoder already exists"},
+                                                    422: {"description": "Validation exception"}}, tags=["encoders"],
+             summary="Create encoder", response_model_by_alias=True, )
 async def create_encoder(encoder_input: Annotated[
-    Optional[EncoderInput], Field(description="Encoder object to be added to the store")] = 
-                         Body(None, description="Encoder object to be added to the store"),
+    Optional[EncoderInput], Field(description="Encoder object to be added to the store")] = Body(None,
+                                                                                                 description="Encoder object to be added to the store"),
                          db: AsyncSession = Depends(get_db),
                          current_user: User = Depends(require_minimum_role("super_admin"))) -> JSONResponse:
     """Create a new encoder (Super User access required)."""
@@ -31,8 +31,7 @@ async def create_encoder(encoder_input: Annotated[
 
 
 @router.delete("/infrastructure/encoders/{id}", responses={200: {"model": Encoder, "description": "Encoder deleted"},
-                                                           404: {"model": Error, "description": "Encoder not found"},
-                                                           200: {"model": Error, "description": "Unexpected error"}, },
+                                                           404: {"model": Error, "description": "Encoder not found"}},
                tags=["encoders"], summary="Delete encoder", response_model_by_alias=True)
 async def delete_encoder(id: StrictInt = Path(..., description=""), db: AsyncSession = Depends(get_db),
                          current_user: User = Depends(require_minimum_role("super_admin"))) -> JSONResponse:
@@ -41,8 +40,7 @@ async def delete_encoder(id: StrictInt = Path(..., description=""), db: AsyncSes
 
 
 @router.get("/infrastructure/encoders/{id}", responses={200: {"model": Encoder, "description": "Encoder details"},
-                                                        404: {"model": Error, "description": "Encoder not found"},
-                                                        200: {"model": Error, "description": "Unexpected error"}, },
+                                                        404: {"model": Error, "description": "Encoder not found"}, },
             tags=["encoders"], summary="Retrieve encoder", response_model_by_alias=True, )
 async def get_encoder(id: StrictInt = Path(..., description=""), db: AsyncSession = Depends(get_db),
                       current_user: User = Depends(require_minimum_role("user"))) -> Encoder:
@@ -51,7 +49,7 @@ async def get_encoder(id: StrictInt = Path(..., description=""), db: AsyncSessio
 
 
 @router.get("/infrastructure/encoders", responses={200: {"model": List[Encoder], "description": "A list of encoders"},
-                                                   200: {"model": Error, "description": "Unexpected error"}, },
+                                                   404: {"model": Error, "description": "No encoders found"}},
             tags=["encoders"], summary="Retrieve encoder list", response_model_by_alias=True, )
 async def get_encoders(db: AsyncSession = Depends(get_db),
                        current_user: User = Depends(require_minimum_role("user"))) -> List[Encoder]:
@@ -62,13 +60,11 @@ async def get_encoders(db: AsyncSession = Depends(get_db),
 @router.put("/infrastructure/encoders/{id}",
             responses={200: {"description": "Encoder updated"}, 400: {"model": Error, "description": "Invalid payload"},
                        404: {"model": Error, "description": "Encoder not found"},
-                       200: {"model": Error, "description": "Unexpected error"}, }, tags=["encoders"],
-            summary="Update encoder", response_model_by_alias=True, )
+                       422: {"description": "Validation exception"}}, tags=["encoders"], summary="Update encoder",
+            response_model_by_alias=True, )
 async def update_encoder(id: StrictInt = Path(..., description=""), db: AsyncSession = Depends(get_db),
-                         current_user: User = Depends(require_minimum_role("super_admin")),
-                         encoder_input: Annotated[
-                             Optional[EncoderInput], Field(
-                                 description="Encoder object to be added to the store")] = 
-                         Body(None, description="Encoder object to be added to the store"), ) -> None:
+                         current_user: User = Depends(require_minimum_role("super_admin")), encoder_input: Annotated[
+            Optional[EncoderInput], Field(description="Encoder object to be added to the store")] = Body(None,
+                                                                                                         description="Encoder object to be added to the store"), ) -> JSONResponse:
     """Update an existing encoder (Super User access required)."""
     return await EncodersService().update_encoder(id, db, encoder_input)
