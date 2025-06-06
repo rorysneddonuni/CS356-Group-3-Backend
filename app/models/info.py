@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import json
 import pprint
-from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
+from typing import Any, ClassVar, Dict, List
 
-from pydantic import BaseModel, Field, StrictBytes, StrictInt, StrictStr
+from pydantic import BaseModel, StrictStr
 
 try:
     from typing import Self
@@ -12,22 +12,12 @@ except ImportError:
     from typing_extensions import Self
 
 
-class EncoderInput(BaseModel):
+class Info(BaseModel):
     """
-    EncoderInput
+    Info message for actions (i.e. create, delete)
     """  # noqa: E501
-    id: Optional[StrictInt] = None
-    name: Optional[StrictStr] = None
-    comment: Optional[StrictStr] = None
-    encoder_type: Optional[StrictStr] = Field(default=None, alias="encoderType")
-    scalable: Optional[bool] = Field(default=False, alias="scalable")
-    noOfLayers: Optional[StrictInt] = Field(default=None, alias="noOfLayers")
-    path: Optional[StrictStr] = Field(default=False, alias="path")
-    filename: Optional[StrictStr] = Field(default=None, alias="filename")
-    modeFileReq: Optional[bool] = Field(default=False, alias="modeFileReq")
-    seqFileReq: Optional[bool] = Field(default=False, alias="seqFileReq")
-    layersFileReq: Optional[bool] = Field(default=False, alias="layersFileReq")
-    __properties: ClassVar[List[str]] = ["id", "name", "encoderType", "scalable", "noOfLayers", "path", "filename", "modeFileReq", "seqFileReq", "layersFilesReq"]
+    message: StrictStr
+    __properties: ClassVar[List[str]] = ["message"]
 
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
 
@@ -42,7 +32,7 @@ class EncoderInput(BaseModel):
 
     @classmethod
     def from_json(cls, json_str: str) -> Self:
-        """Create an instance of EncoderInput from a JSON string"""
+        """Create an instance of Error from a JSON string"""
         return cls.from_dict(json.loads(json_str))
 
     def to_dict(self) -> Dict[str, Any]:
@@ -60,13 +50,12 @@ class EncoderInput(BaseModel):
 
     @classmethod
     def from_dict(cls, obj: Dict) -> Self:
-        """Create an instance of EncoderInput from a dict"""
+        """Create an instance of Error from a dict"""
         if obj is None:
             return None
 
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        _obj = cls.model_validate({"id": obj.get("id"), "name": obj.get("name"), "encoderType": obj.get("encoderType"),
-                                   "encoderCode": obj.get("encoderCode"), "layers": obj.get("layers")})
+        _obj = cls.model_validate({"message": obj.get("message")})
         return _obj

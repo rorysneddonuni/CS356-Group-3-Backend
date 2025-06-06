@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import pprint
 from datetime import datetime
+from enum import Enum
 from typing import Any, ClassVar, Dict, List, Optional
 
 from pydantic import BaseModel, Field, StrictStr
@@ -16,18 +17,24 @@ except ImportError:
     from typing_extensions import Self
 
 
+class ExperimentStatus(str, Enum):
+    COMPLETE = 'COMPLETE'
+    PENDING = 'PENDING'
+    ERROR = 'ERROR'
+
+
 class Experiment(BaseModel):
     """
     Experiment
     """  # noqa: E501
     id: Optional[StrictStr] = None
-    experiment_name: StrictStr = Field(alias="experimentName")
+    name: StrictStr = Field(alias="experimentName")
     description: Optional[StrictStr] = None
     video_sources: List[StrictStr] = Field(alias="videoSources")
     encoding_parameters: EncodingParameters = Field(alias="encodingParameters")
     network_conditions: NetworkConditions = Field(alias="networkConditions")
     metrics_requested: List[StrictStr] = Field(alias="metricsRequested")
-    status: Optional[StrictStr] = None
+    status: Optional[ExperimentStatus] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
     __properties: ClassVar[List[str]] = ["id", "experimentName", "description", "videoSources", "encodingParameters",
                                          "networkConditions", "metricsRequested", "status", "createdAt"]
