@@ -24,7 +24,7 @@ class User(BaseModel):
         exclude=True,
         description="Hashed password (never exposed in responses)"
     )
-    role: Optional[Literal["user", "admin", "super_admin"]] = "user"
+    role: Optional[Literal["pending", "user", "admin", "super_admin"]] = "pending"
 
     __properties: ClassVar[List[str]] = [
         "id", "username", "firstName", "lastName", "email", "role"

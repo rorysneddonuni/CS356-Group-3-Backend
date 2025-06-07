@@ -975,6 +975,7 @@ components:
           title: role
           type: string
           enum:
+          - pending
           - user
           - admin
           - super_admin
@@ -1013,6 +1014,7 @@ components:
           title: role
           type: string
           enum:
+          - pending
           - user
           - admin
           - super_admin
