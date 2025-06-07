@@ -17,9 +17,12 @@ class Network(BaseModel):
     Network
     """  # noqa: E501
     id: Optional[StrictInt] = None
-    name: Optional[StrictStr] = None
-    network_type: Optional[StrictStr] = Field(default=None, alias="networkType")
-    __properties: ClassVar[List[str]] = ["id", "name", "networkType"]
+    name: Optional[StrictStr] = Field(None, alias="name")
+    packet_loss: Optional[StrictInt] = Field(default=None, alias="packetLoss")
+    delay: Optional[StrictInt] = Field(default=None, alias="delay")
+    jitter: Optional[StrictInt] = Field(default=None, alias="jitter")
+    bandwidth: Optional[StrictInt] = Field(default=None, alias="bandwidth")
+    __properties: ClassVar[List[str]] = ["id", "name", "packet_loss", "delay", "jitter", "bandwidth"]
 
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
 

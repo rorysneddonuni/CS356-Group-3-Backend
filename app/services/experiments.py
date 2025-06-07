@@ -1,8 +1,7 @@
 import json
 from typing import Optional, ClassVar, Tuple
 
-from fastapi import HTTPException, Depends
-from fastapi.responses import JSONResponse
+from fastapi import HTTPException
 from pydantic import Field, StrictStr
 from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +12,7 @@ from typing_extensions import Annotated
 from app.database.tables.experiments import Experiment as experiment_table
 from app.models.experiment import Experiment, ExperimentStatus
 from app.models.experiment_input import ExperimentInput
+from app.models.user import User
 from tests.utility.validation import validate_experiment
 
 
@@ -25,7 +25,7 @@ class ExperimentsService:
 
     async def create_experiment(self, experiment_input: Annotated[
         Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")],
-                                db: AsyncSession) -> Experiment:
+                                user: User, db: AsyncSession) -> Experiment:
         # Check if experiment name already exists
         result = await db.execute(
             select(experiment_table).where(or_(experiment_table.experiment_name == experiment_input.experiment_name)))
@@ -38,7 +38,7 @@ class ExperimentsService:
         data["metrics_requested"] = json.dumps(data["metrics_requested"])
         data["encoding_parameters"] = json.dumps(data["encoding_parameters"])
         data["network_conditions"] = json.dumps(data["network_conditions"])
-        data["owner_id"] = "1"  # todo fix
+        data["owner_id"] = user.id
         data["status"] = ExperimentStatus.PENDING
         db_obj = experiment_table(**data)
         db.add(db_obj)
@@ -48,8 +48,7 @@ class ExperimentsService:
         return validate_experiment(db_obj)
 
     async def delete_experiment(self, experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")],
-                                db: AsyncSession) -> JSONResponse:
+        StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> JSONResponse:
         result = await db.execute(select(experiment_table).where(experiment_table.id == experiment_id))
         db_obj = result.scalars().first()
         if not db_obj:
@@ -60,8 +59,7 @@ class ExperimentsService:
         return JSONResponse(status_code=200, content={"message": "Experiment deleted"})
 
     async def get_experiment(self, experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")],
-                             db: AsyncSession) -> Experiment:
+        StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> Experiment:
         result = await db.execute(select(experiment_table).where(experiment_table.id == experiment_id))
         db_obj = result.scalars().first()
         if not db_obj:
@@ -95,7 +93,7 @@ class ExperimentsService:
         updates["metrics_requested"] = json.dumps(updates["metrics_requested"])
         updates["encoding_parameters"] = json.dumps(updates["encoding_parameters"])
         updates["network_conditions"] = json.dumps(updates["network_conditions"])
-        updates["owner_id"] = "1"  # todo fix
+        updates["owner_id"] = user_id
         updates["status"] = experiment_input.status
 
         for field, value in updates.items():
