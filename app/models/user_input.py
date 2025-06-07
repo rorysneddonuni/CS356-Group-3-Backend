@@ -22,7 +22,7 @@ class UserInput(BaseModel):
     last_name: Optional[StrictStr] = Field(default=None, alias="last_name")
     email: Optional[StrictStr] = None
     password: Optional[StrictStr] = None
-    role: Optional[Literal["user", "admin", "super_admin"]] = None
+    role: Optional[Literal["pending", "user", "admin", "super_admin"]] = "pending"
 
     __properties: ClassVar[List[str]] = [
         "username", "first_name", "last_name", "email", "password", "role"
