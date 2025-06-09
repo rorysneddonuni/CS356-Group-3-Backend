@@ -9,7 +9,6 @@ from typing import Any, ClassVar, Dict, List, Optional
 from pydantic import BaseModel, Field, StrictStr
 
 from app.models.encoding_parameters import EncodingParameters
-from app.models.network_conditions import NetworkConditions
 
 try:
     from typing import Self
@@ -32,7 +31,7 @@ class Experiment(BaseModel):
     description: Optional[StrictStr] = None
     video_sources: List[StrictStr] = Field(alias="videoSources")
     encoding_parameters: EncodingParameters = Field(alias="encodingParameters")
-    network_conditions: NetworkConditions = Field(alias="networkConditions")
+    network_disruption_id: StrictStr = Field(alias="networkDisruptionId")
     metrics_requested: List[StrictStr] = Field(alias="metricsRequested")
     status: Optional[ExperimentStatus] = None
     created_at: Optional[datetime] = Field(default=None, alias="createdAt")
