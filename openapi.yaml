@@ -975,9 +975,10 @@ components:
           title: role
           type: string
           enum:
+          - pending
           - user
           - admin
-          - superadmin
+          - super_admin
           default: user
       title: User
       type: object
@@ -1013,9 +1014,10 @@ components:
           title: role
           type: string
           enum:
+          - pending
           - user
           - admin
-          - superadmin
+          - super_admin
           default: user
       title: UserInput
       type: object

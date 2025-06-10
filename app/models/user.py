@@ -11,7 +11,6 @@ try:
 except ImportError:
     from typing_extensions import Self
 
-
 class User(BaseModel):
     """
     User
@@ -26,8 +25,7 @@ class User(BaseModel):
         exclude=True,
         description="Hashed password (never exposed in responses)"
     )
-    role: Optional[Literal["unauthorised", "user", "admin", "superadmin"]] = "user"
-    created_at: Optional[datetime] = Field(default=None, alias="createdAt")
+    role: Optional[Literal["pending", "user", "admin", "super_admin"]] = "pending"
 
     __properties: ClassVar[List[str]] = [
         "id",

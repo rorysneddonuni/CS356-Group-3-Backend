@@ -13,7 +13,8 @@ from starlette.responses import StreamingResponse
 from typing_extensions import Annotated
 
 from app.config.settings import Settings
-from app.database.tables.experiments import ExperimentResult, Experiment
+from app.database.tables.experiments import Experiment
+from app.database.tables.results import ExperimentResult
 from app.models.info import Info
 from app.services.utility.files import upload_file
 
@@ -46,7 +47,7 @@ class ResultsService:
                 zf.write(result.path, arcname=result.filename)
         zip_buffer.seek(0)
         return StreamingResponse(zip_buffer, media_type='application/zip',
-                                 headers={"Content-Disposition": f"attachment; filename={experiment.name}_results.zip"})
+                                 headers={"Content-Disposition": f"attachment; filename={experiment.experiment_name}_results.zip"})
 
     async def upload_result(self, experiment_id: int, file: UploadFile, db: AsyncSession, settings: Settings) -> Info:
         results = await db.execute(select(ExperimentResult).where(ExperimentResult.experiment_id == experiment_id,

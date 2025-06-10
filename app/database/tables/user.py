@@ -5,10 +5,10 @@ import enum
 from app.database.database import Base
 
 class UserRole(enum.Enum):
-    unauthorised = 'unauthorised'
+    pending = "pending"
     user = "user"
     admin = "admin"
-    superadmin = "superadmin"
+    super_admin = "super_admin"
 
 
 class User(Base):
@@ -20,7 +20,7 @@ class User(Base):
     last_name = Column(String(100), nullable=False)
     email = Column(String(100), unique=True, nullable=False, index=True)
     password = Column(String(128), nullable=False)
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.unauthorised)
+    role = Column(Enum(UserRole), nullable=False, default=UserRole.pending)
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc),

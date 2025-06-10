@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import ClassVar, Tuple, Optional
 
 from jose import jwt
@@ -30,8 +30,8 @@ class BaseAuthApi:
 
     def create_access_token(self, data: dict, expires_delta: Optional[timedelta] = None) -> str:
         to_encode = data.copy()
-        expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-        to_encode.update({"exp": int(expire.timestamp())})
+        expire = datetime.now() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        to_encode.update({"exp": expire})
         return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
     async def login_user(self, login_request: LoginRequest, db) -> LoginResponse:
@@ -47,14 +47,15 @@ class AuthService(BaseAuthApi):
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid username or password"
             )
-        issued_at = int(datetime.utcnow().timestamp())
-        payload = {
+        now = datetime.now(timezone.utc)
+        token_data = {
             "sub": user.username,
             "role": user.role,
-            "issued_at": issued_at,
-            "firstname": user.first_name,
-            "surname": user.last_name,
-            "username": user.username,
+            "first_name": user.first_name,
+            "last_name": user.last_name,
+            "email": user.email,
+            "iat": int(now.timestamp())
         }
-        token = self.create_access_token(payload)
+
+        token = self.create_access_token(token_data)
         return LoginResponse(token=token)
