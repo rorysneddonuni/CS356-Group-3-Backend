@@ -2,6 +2,7 @@ from __future__ import annotations
 import json
 import pprint
 from typing import Any, ClassVar, Dict, List, Optional, Literal
+from datetime import datetime
 
 from pydantic import BaseModel, Field, StrictInt, StrictStr
 
@@ -27,8 +28,15 @@ class User(BaseModel):
     role: Optional[Literal["pending", "user", "admin", "super_admin"]] = "pending"
 
     __properties: ClassVar[List[str]] = [
-        "id", "username", "firstName", "lastName", "email", "role"
+        "id",
+        "username",
+        "firstName",
+        "lastName",
+        "email",
+        "role",
+        "createdAt",
     ]
+
     model_config = {
         "populate_by_name": True,
         "validate_assignment": True,

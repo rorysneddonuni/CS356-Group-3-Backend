@@ -16,30 +16,61 @@ from __future__ import annotations
 import pprint
 import re  # noqa: F401
 import json
+from datetime import datetime
 
-
-
-
-from pydantic import BaseModel, ConfigDict, Field, StrictStr
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, StrictInt
 from typing import Any, ClassVar, Dict, List, Optional
+
 try:
     from typing import Self
 except ImportError:
     from typing_extensions import Self
 
+
 class LoginResponse(BaseModel):
     """
     LoginResponse
-    """ # noqa: E501
-    token: Optional[StrictStr] = Field(default=None, description="JWT token to be used in Authorization header")
-    __properties: ClassVar[List[str]] = ["token"]
+    """  # noqa: E501
+
+    token: Optional[StrictStr] = Field(
+        default=None, description="JWT token to be used in Authorization header"
+    )
+
+    # New fields added below:
+    issued_at: Optional[datetime] = Field(
+        default=None,
+        alias="issuedAt",
+        description="UTC datetime (ISO8601) when the JWT was issued",
+    )
+    first_name: Optional[StrictStr] = Field(
+        default=None,
+        alias="firstName",
+        description="User's first name, copied into the JWT",
+    )
+    last_name: Optional[StrictStr] = Field(
+        default=None,
+        alias="lastName",
+        description="User's last name, copied into the JWT",
+    )
+    username: Optional[StrictStr] = Field(
+        default=None,
+        alias="username",
+        description="User's username, copied into the JWT",
+    )
+
+    __properties: ClassVar[List[str]] = [
+        "token",
+        "issuedAt",
+        "firstName",
+        "lastName",
+        "username",
+    ]
 
     model_config = {
         "populate_by_name": True,
         "validate_assignment": True,
         "protected_namespaces": (),
     }
-
 
     def to_str(self) -> str:
         """Returns the string representation of the model using alias"""
@@ -67,8 +98,7 @@ class LoginResponse(BaseModel):
         """
         _dict = self.model_dump(
             by_alias=True,
-            exclude={
-            },
+            exclude={},
             exclude_none=True,
         )
         return _dict
@@ -82,9 +112,13 @@ class LoginResponse(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        _obj = cls.model_validate({
-            "token": obj.get("token")
-        })
+        _obj = cls.model_validate(
+            {
+                "token": obj.get("token"),
+                "issuedAt": obj.get("issuedAt"),
+                "firstName": obj.get("firstName"),
+                "lastName": obj.get("lastName"),
+                "username": obj.get("username"),
+            }
+        )
         return _obj
-
-
