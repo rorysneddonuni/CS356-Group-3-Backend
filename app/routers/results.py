@@ -23,7 +23,7 @@ async def get_experiment_results(current_user: User = Depends(require_minimum_ro
     """Get list of files to download for results."""
     if not ResultsService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
-    return await ResultsService.subclasses[0]().get_experiment_results(experiment_id, db)
+    return await ResultsService.subclasses[0]().get_experiment_results(experiment_id, current_user, db)
 
 
 @router.post("/{experiment_id}/results",

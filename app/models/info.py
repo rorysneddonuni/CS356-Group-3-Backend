@@ -21,6 +21,9 @@ class Info(BaseModel):
 
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
 
+    def __init__(self, message: str):
+        self.message = message
+
     def to_str(self) -> str:
         """Returns the string representation of the model using alias"""
         return pprint.pformat(self.model_dump(by_alias=True))

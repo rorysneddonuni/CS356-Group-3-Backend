@@ -27,7 +27,7 @@ async def create_experiment(current_user: User = Depends(require_minimum_role("u
                                                                                                                   description="Experiment object that needs to be added to the store"),
                             db: AsyncSession = Depends(get_db)) -> Experiment:
     """Create a new experiment under a given user."""
-    return await ExperimentsService().create_experiment(experiment_input, db)
+    return await ExperimentsService().create_experiment(experiment_input, current_user, db)
 
 
 @router.delete("/experiments/{experiment_id}",
@@ -60,7 +60,7 @@ async def get_experiment(current_user: User = Depends(require_minimum_role("user
 async def get_experiments(db: AsyncSession = Depends(get_db),
                           current_user: User = Depends(require_minimum_role("user"))) -> Experiment:
     """List experiments for a given user."""
-    return await ExperimentsService().get_experiments("1", db)
+    return await ExperimentsService().get_experiments(current_user.id, db)
 
 
 @router.put("/experiments/{experiment_id}", responses={200: {"description": "successful operation"}, 400: {
@@ -76,4 +76,4 @@ async def update_experiment(current_user: User = Depends(require_minimum_role("u
                                                                                                              description="Experiment object that needs to be added to the store"),
                             db: AsyncSession = Depends(get_db)) -> Experiment:
     """This can only be done by the user who owns the experiment."""
-    return await ExperimentsService().update_experiment("1", experiment_id, experiment_input, db)
+    return await ExperimentsService().update_experiment(current_user.id, experiment_id, experiment_input, db)
