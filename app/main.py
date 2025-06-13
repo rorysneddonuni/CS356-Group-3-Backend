@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
+from starlette.middleware.cors import CORSMiddleware
 
 from app.database.database import engine, Base
 from app.routers.encoders import router as encoders_router
@@ -13,6 +14,10 @@ from app.routers.auth import router as auth_router
 app = FastAPI(title="IKlik Backend Services",
               description="API gateway for dataservices providing data access and management for IKlik services.",
               version="1.0.0")
+
+app.add_middleware(CORSMiddleware,
+                   allow_origin_regex=r"^(https:\/\/([a-zA-Z0-9-]+\.)*uni\.kylestevenson\.dev|http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?)$",
+                   allow_credentials=True,    allow_methods=["*"],    allow_headers=["*"],)
 
 app.include_router(encoders_router)
 app.include_router(experiments_router)
