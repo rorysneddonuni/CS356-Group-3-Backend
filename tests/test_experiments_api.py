@@ -1,18 +1,30 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from pydantic import Field, StrictBytes, StrictStr  # noqa: F401
 from typing import Any, List, Optional, Tuple, Union  # noqa: F401
 from typing_extensions import Annotated  # noqa: F401
+
+from app.auth.dependencies import get_current_user
+from app.database.tables.network import Network
 from app.models.error import Error  # noqa: F401
 from app.models.experiment import Experiment  # noqa: F401
-from app.models.experiment_status import ExperimentStatus  # noqa: F401
+from app.main import app
+from tests.test_results_api import mock_user
 
 
-def test_create_experiment(client: TestClient):
+@pytest.mark.asyncio
+async def test_create_experiment(client: TestClient, db):
     """Test case for create_experiment
 
     Create a new experiment.
     """
+    app.dependency_overrides[get_current_user] = lambda: mock_user()
+    db_network = Network(**{"name": "test", "packet_loss": 10, "delay": 10, "jitter": 1, "bandwidth": "0"})
+    db.add(db_network)
+    await db.commit()
+    await db.refresh(db_network)
+
     experiment_input = {
         "experimentName": "Streaming Test A",
         "description": "Testing encoding and network parameters",
@@ -22,10 +34,7 @@ def test_create_experiment(client: TestClient):
             "bitrate": "3000",
             "resolution": "1280x720"
         },
-        "networkConditions": {
-            "packet_loss": "0.01",
-            "delay": "100"
-        },
+        "networkDisruptionProfileId": db_network.id,
         "metricsRequested": ["latency", "packetLoss", "bitrate"]
     }
     headers = {
@@ -79,24 +88,6 @@ def test_get_experiment(client: TestClient):
     # uncomment below to assert the status code of the HTTP response
     assert response.status_code == 200
 
-
-def test_get_experiment_status(client: TestClient):
-    """Test case for get_experiment_status
-
-    Get experiment status
-    """
-
-    headers = {
-    }
-    # uncomment below to make a request
-    response = client.request(
-        "GET",
-        "/experiments/{experimentId}/status".format(experimentId='1'),
-        headers=headers,
-    )
-
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
 
 
 def test_get_experiments(client: TestClient):
