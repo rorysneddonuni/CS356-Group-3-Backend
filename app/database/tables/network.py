@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String
+from sqlalchemy.orm import relationship
 
 from app.database.database import Base
 
@@ -12,3 +13,5 @@ class Network(Base):
     delay = Column(Integer, nullable=True)
     jitter = Column(Integer, nullable=True)
     bandwidth = Column(Integer, nullable=True)
+
+    experiments = relationship("Experiment", back_populates="network_disruption_profile")

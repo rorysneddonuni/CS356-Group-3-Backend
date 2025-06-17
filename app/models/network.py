@@ -22,7 +22,7 @@ class NetworkInput(BaseModel):
                     "from_attributes": True}
 
 
-class Network(BaseModel):
+class Network(NetworkInput):
     """
     Network
     """  # noqa: E501

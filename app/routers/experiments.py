@@ -10,8 +10,7 @@ from typing_extensions import Annotated
 
 from app.auth.dependencies import require_minimum_role
 from app.database.database import get_db
-from app.models.experiment import Experiment
-from app.models.experiment_input import ExperimentInput
+from app.models.experiment import Experiment, ExperimentInput
 from app.models.user import User
 from app.services.experiments import ExperimentsService
 

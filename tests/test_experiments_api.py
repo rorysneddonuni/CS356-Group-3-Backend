@@ -5,7 +5,6 @@ from typing import Any, List, Optional, Tuple, Union  # noqa: F401
 from typing_extensions import Annotated  # noqa: F401
 from app.models.error import Error  # noqa: F401
 from app.models.experiment import Experiment  # noqa: F401
-from app.models.experiment_input import ExperimentInput  # noqa: F401
 from app.models.experiment_status import ExperimentStatus  # noqa: F401
 
 

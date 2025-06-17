@@ -24,7 +24,7 @@ class NetworksService:
         Optional[Network], Field(description="Network object that needs to be added to the store")],
                              db: AsyncSession) -> NetworkTable:
         """Upload a new network (Super User access required)."""
-        db_network = NetworkTable(**network_input.model_dump(by_alias=True))
+        db_network = NetworkTable(**network_input.model_dump())
         db.add(db_network)
         await db.commit()
         await db.refresh(db_network)
