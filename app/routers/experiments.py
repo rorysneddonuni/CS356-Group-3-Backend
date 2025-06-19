@@ -10,8 +10,7 @@ from typing_extensions import Annotated
 
 from app.auth.dependencies import require_minimum_role
 from app.database.database import get_db
-from app.models.experiment import Experiment
-from app.models.experiment_input import ExperimentInput
+from app.models.experiment import Experiment, ExperimentInput
 from app.models.user import User
 from app.services.experiments import ExperimentsService
 
@@ -75,7 +74,6 @@ async def get_experiments(
     return await ExperimentsService().get_all_experiments(db)
 
 
-
 @router.put("/experiments/{experiment_id}", responses={200: {"description": "successful operation"}, 400: {
     "description": "Only the owner of the experiment can update the experiment"},
                                                        404: {"description": "experiment not found"},
@@ -89,4 +87,4 @@ async def update_experiment(current_user: User = Depends(require_minimum_role("u
                                                                                                              description="Experiment object that needs to be added to the store"),
                             db: AsyncSession = Depends(get_db)) -> Experiment:
     """This can only be done by the user who owns the experiment."""
-    return await ExperimentsService().update_experiment("1", experiment_id, experiment_input, db)
+    return await ExperimentsService().update_experiment(current_user.id, experiment_id, experiment_input, db)

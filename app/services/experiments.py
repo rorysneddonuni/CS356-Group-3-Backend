@@ -1,18 +1,18 @@
 import json
 from typing import Optional, ClassVar, Tuple, List
 
-from fastapi import HTTPException, Depends
-from fastapi.responses import JSONResponse
+from fastapi import HTTPException
 from pydantic import Field, StrictStr
 from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
 from app.database.tables.experiments import Experiment as experiment_table
-from app.models.experiment import Experiment, ExperimentStatus
-from app.models.experiment_input import ExperimentInput
+from app.models.experiment import Experiment, ExperimentStatus, ExperimentInput
+from app.models.user import User
 from tests.utility.validation import validate_experiment
 
 
@@ -25,19 +25,19 @@ class ExperimentsService:
 
     async def create_experiment(self, owner_id, experiment_input: Annotated[
         Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")],
-                                db: AsyncSession) -> Experiment:
+                                user: User, db: AsyncSession) -> Experiment:
         # Check if experiment name already exists
         result = await db.execute(
-            select(experiment_table).where(or_(experiment_table.experiment_name == experiment_input.experiment_name)))
+            select(experiment_table).options(joinedload(experiment_table.network_disruption_profile)).where(
+                or_(experiment_table.experiment_name == experiment_input.experiment_name)))
         existing = result.scalars().first()
         if existing:
             raise HTTPException(status_code=400, detail="Experiment name already exists")
         # Create and save experiment
-        data = experiment_input.model_dump(exclude_none=True, by_alias=False)
+        data = experiment_input.model_dump()
         data["video_sources"] = json.dumps(data["video_sources"])
         data["metrics_requested"] = json.dumps(data["metrics_requested"])
         data["encoding_parameters"] = json.dumps(data["encoding_parameters"])
-        data["network_conditions"] = json.dumps(data["network_conditions"])
         data["owner_id"] = owner_id
         data["status"] = ExperimentStatus.PENDING
         db_obj = experiment_table(**data)
@@ -45,12 +45,16 @@ class ExperimentsService:
         await db.commit()
         await db.refresh(db_obj)
 
-        return validate_experiment(db_obj)
+        eager_result = await db.execute(
+            select(experiment_table).options(joinedload(experiment_table.network_disruption_profile)).where(
+                or_(experiment_table.id == db_obj.id)))
+        return validate_experiment(eager_result.scalar_one())
 
     async def delete_experiment(self, experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")],
-                                db: AsyncSession) -> JSONResponse:
-        result = await db.execute(select(experiment_table).where(experiment_table.id == experiment_id))
+        StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> JSONResponse:
+        result = await db.execute(
+            select(experiment_table).options(joinedload(experiment_table.network_disruption_profile)).where(
+                experiment_table.id == experiment_id))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="Experiment not found")
@@ -60,9 +64,10 @@ class ExperimentsService:
         return JSONResponse(status_code=200, content={"message": "Experiment deleted"})
 
     async def get_experiment(self, experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")],
-                             db: AsyncSession) -> Experiment:
-        result = await db.execute(select(experiment_table).where(experiment_table.id == experiment_id))
+        StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> Experiment:
+        result = await db.execute(
+            select(experiment_table).options(joinedload(experiment_table.network_disruption_profile)).where(
+                experiment_table.id == experiment_id))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="Experiment not found")
@@ -74,7 +79,8 @@ class ExperimentsService:
             db: AsyncSession
     ) -> List[Experiment]:
         result = await db.execute(
-            select(experiment_table).where(experiment_table.owner_id == user_id)
+            select(experiment_table).options(joinedload(experiment_table.network_disruption_profile)).where(
+              experiment_table.owner_id == user_id)
         )
         db_objs = result.scalars().all()
 
@@ -96,7 +102,9 @@ class ExperimentsService:
         Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")],
                                 db: AsyncSession) -> Experiment:
         """This can only be done by the user who owns the experiment."""
-        result = await db.execute(select(experiment_table).where(experiment_table.id == experiment_id))
+        result = await db.execute(
+            select(experiment_table).options(joinedload(experiment_table.network_disruption_profile)).where(
+                experiment_table.id == experiment_id))
         experiment = result.scalars().first()
 
         if not experiment:
@@ -109,7 +117,7 @@ class ExperimentsService:
         updates["metrics_requested"] = json.dumps(updates["metrics_requested"])
         updates["encoding_parameters"] = json.dumps(updates["encoding_parameters"])
         updates["network_conditions"] = json.dumps(updates["network_conditions"])
-        updates["owner_id"] = "1"  # todo fix
+        updates["owner_id"] = user_id
         updates["status"] = experiment_input.status
 
         for field, value in updates.items():
