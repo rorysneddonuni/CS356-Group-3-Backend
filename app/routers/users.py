@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Optional
 
-from fastapi import APIRouter, Body, HTTPException, Path, Depends
+from fastapi import APIRouter, Body, HTTPException, Path, Depends, Query
 from pydantic import StrictStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import Annotated
@@ -53,8 +53,11 @@ async def create_user(
     summary="Get all users.",
     response_model_by_alias=True,
 )
-async def get_all_users(current_user: User = Depends(require_minimum_role("user")),
-                        db: AsyncSession = Depends(get_db)) -> List[User]:
+async def get_all_users(
+    current_user: User = Depends(require_minimum_role("user")),
+    db: AsyncSession = Depends(get_db),
+    roles: Optional[List[str]] = Query(default=None, description="Filter users by roles"),
+) -> List[User]:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
 
@@ -65,7 +68,7 @@ async def get_all_users(current_user: User = Depends(require_minimum_role("user"
         user = await service.get_user_by_name(current_user.username, db)
         return [user] if user else []
 
-    return await service.get_all_users(db)
+    return await service.get_all_users(db, roles=roles)
 
 
 @router.get(

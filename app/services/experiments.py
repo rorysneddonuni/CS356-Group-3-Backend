@@ -1,5 +1,5 @@
 import json
-from typing import Optional, ClassVar, Tuple
+from typing import Optional, ClassVar, Tuple, List
 
 from fastapi import HTTPException
 from pydantic import Field, StrictStr
@@ -23,7 +23,7 @@ class ExperimentsService:
         super().__init_subclass__(**kwargs)
         ExperimentsService.subclasses = ExperimentsService.subclasses + (cls,)
 
-    async def create_experiment(self, experiment_input: Annotated[
+    async def create_experiment(self, owner_id, experiment_input: Annotated[
         Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")],
                                 user: User, db: AsyncSession) -> Experiment:
         # Check if experiment name already exists
@@ -38,7 +38,7 @@ class ExperimentsService:
         data["video_sources"] = json.dumps(data["video_sources"])
         data["metrics_requested"] = json.dumps(data["metrics_requested"])
         data["encoding_parameters"] = json.dumps(data["encoding_parameters"])
-        data["owner_id"] = user.id
+        data["owner_id"] = owner_id
         data["status"] = ExperimentStatus.PENDING
         db_obj = experiment_table(**data)
         db.add(db_obj)
@@ -73,15 +73,28 @@ class ExperimentsService:
             raise HTTPException(status_code=404, detail="Experiment not found")
         return validate_experiment(db_obj)
 
-    async def get_experiments(self, user_id: Annotated[StrictStr, Field(description="ID to uniquely identify a user.")],
-                              db: AsyncSession) -> Experiment:
+    async def get_experiments(
+            self,
+            user_id: Annotated[StrictStr, Field(description="ID to uniquely identify a user.")],
+            db: AsyncSession
+    ) -> List[Experiment]:
         result = await db.execute(
             select(experiment_table).options(joinedload(experiment_table.network_disruption_profile)).where(
-                experiment_table.owner_id == user_id))
-        db_obj = result.scalars().first()
-        if not db_obj:
+              experiment_table.owner_id == user_id)
+        )
+        db_objs = result.scalars().all()
+
+        if not db_objs:
             raise HTTPException(status_code=404, detail="No experiments found for user")
-        return validate_experiment(db_obj)
+
+        return [validate_experiment(obj) for obj in db_objs]
+
+    async def get_all_experiments(self, db: AsyncSession) -> list[Experiment]:
+        result = await db.execute(select(experiment_table))
+        experiments = result.scalars().all()
+        if not experiments:
+            raise HTTPException(status_code=404, detail="No experiments found")
+        return [validate_experiment(exp) for exp in experiments]
 
     async def update_experiment(self, user_id: Annotated[
         StrictStr, Field(description="ID to uniquely identify the current user.")], experiment_id: Annotated[
