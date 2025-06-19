@@ -6,7 +6,7 @@ from typing import ClassVar, List, Optional
 
 from pydantic import BaseModel, Field, StrictStr
 
-from app.models.experiment_sequence import ExperimentSequence
+from app.models.experiment_sequence import ExperimentSequence, ExperimentSequenceInput
 
 try:
     from typing import Self
@@ -26,7 +26,7 @@ class ExperimentInput(BaseModel):
     """  # noqa: E501
     experiment_name: StrictStr = Field(alias="experimentName")
     description: Optional[StrictStr] = Field(alias="description")
-    sequences: List[ExperimentSequence] = Field(alias="sequences")
+    sequences: List[ExperimentSequenceInput] = Field(alias="sequences")
 
     __properties: ClassVar[List[str]] = ["experimentName", "description", "sequences"]
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (),

@@ -5,11 +5,11 @@ from fastapi import HTTPException
 from pydantic import Field, StrictStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, selectinload
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
-from app.database.tables.experiments import Experiment as ExperimentTable
+from app.database.tables.experiments import Experiment as ExperimentTable, ExperimentSequence
 from app.models.experiment import Experiment, ExperimentStatus, ExperimentInput
 
 
@@ -30,14 +30,20 @@ class ExperimentsService:
         if existing:
             raise HTTPException(status_code=400, detail="Experiment name already exists")
         # Create and save experiment
-        db_obj = ExperimentTable(
+        experiment = ExperimentTable(
             **{**experiment_input.model_dump(), "owner_id": user_id, "status": ExperimentStatus.PENDING,
-               "created_at": datetime.now()})
-        db.add(db_obj)
+               "created_at": datetime.now(), "sequences": []})
+        db.add(experiment)
         await db.commit()
-        await db.refresh(db_obj)
+        await db.refresh(experiment)
 
-        return Experiment.model_validate(await self.get_experiment(db_obj.id, db))
+        # Create nested sequences
+        for sequence in experiment_input.sequences:
+            db_sequence = ExperimentSequence(**{**sequence.model_dump(), "parent_experiment_id": experiment.id})
+            db.add(db_sequence)
+        await db.commit()
+
+        return Experiment.model_validate(await self.get_experiment(experiment.id, db))
 
     async def delete_experiment(self, experiment_id: Annotated[
         StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> JSONResponse:
@@ -49,7 +55,9 @@ class ExperimentsService:
 
     async def get_experiment(self, experiment_id: Annotated[
         StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> Experiment:
-        result = await db.execute(select(ExperimentTable).options(joinedload(ExperimentTable.sequences)).where(
+        result = await db.execute(select(ExperimentTable).options(
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_topology),
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_disruption_profile)).where(
             ExperimentTable.id == experiment_id))
         db_obj = result.scalars().first()
         if not db_obj:
@@ -58,7 +66,9 @@ class ExperimentsService:
 
     async def get_experiments(self, user_id: Annotated[StrictStr, Field(description="ID to uniquely identify a user.")],
                               db: AsyncSession) -> List[Experiment]:
-        result = await db.execute(select(ExperimentTable).options(joinedload(ExperimentTable.sequences)).where(
+        result = await db.execute(select(ExperimentTable).options(
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_topology),
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_disruption_profile)).where(
             ExperimentTable.owner_id == user_id))
         db_objs = result.unique().scalars().all()
 
@@ -68,7 +78,9 @@ class ExperimentsService:
         return [Experiment.model_validate(obj) for obj in db_objs]
 
     async def get_all_experiments(self, db: AsyncSession) -> list[Experiment]:
-        result = await db.execute(select(ExperimentTable).options(joinedload(ExperimentTable.sequences)))
+        result = await db.execute(select(ExperimentTable).options(
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_topology),
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_disruption_profile)))
         experiments = result.unique().scalars().all()
         if not experiments:
             raise HTTPException(status_code=404, detail="No experiments found")
