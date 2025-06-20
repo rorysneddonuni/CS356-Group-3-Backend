@@ -7,8 +7,9 @@ from app.database.database import Base
 class Network(Base):
     __tablename__ = "network"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    name = Column(String, nullable=True)
+    network_profile_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    network_name = Column(String, nullable=True)
+    description = Column(String, nullable=True)
     packet_loss = Column(Integer, nullable=True)
     delay = Column(Integer, nullable=True)
     jitter = Column(Integer, nullable=True)
