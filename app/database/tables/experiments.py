@@ -13,8 +13,8 @@ class ExperimentSequence(Base):
 
     sequence_id = Column(Integer, primary_key=True, autoincrement=True)
     parent_experiment_id = Column(Integer, ForeignKey('experiments.id'))
-    network_topology_id = Column(Integer, ForeignKey('network.id'))
-    network_disruption_profile_id = Column(Integer, ForeignKey('network.id'))
+    network_topology_id = Column(Integer, ForeignKey('network.network_profile_id'))
+    network_disruption_profile_id = Column(Integer, ForeignKey('network.network_profile_id'))
     encoding_parameters = Column(JSON)
 
     network_disruption_profile = relationship("Network", foreign_keys=[network_disruption_profile_id], back_populates="network_disruption_profile_sequences")
