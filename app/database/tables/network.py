@@ -14,4 +14,8 @@ class Network(Base):
     jitter = Column(Integer, nullable=True)
     bandwidth = Column(Integer, nullable=True)
 
-    experiments = relationship("Experiment", back_populates="network_disruption_profile")
+    network_topology_sequences = relationship("ExperimentSequence", back_populates="network_topology",
+                                              foreign_keys="[ExperimentSequence.network_topology_id]")
+    network_disruption_profile_sequences = relationship("ExperimentSequence",
+                                                        back_populates="network_disruption_profile",
+                                                        foreign_keys="[ExperimentSequence.network_disruption_profile_id]")

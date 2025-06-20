@@ -8,11 +8,9 @@ from sqlalchemy import select, or_
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
+from app.database.tables.encoders import Encoders as encoder_table
 from app.models.encoder import Encoder
 from app.models.encoder_input import EncoderInput
-
-from app.database.tables.encoders import Encoders as encoder_table, Encoders
-from tests.utility.validation import validate_experiment, validate_encoder
 
 
 class EncodersService:
@@ -25,8 +23,7 @@ class EncodersService:
     async def create_encoder(self, encoder_input: Annotated[
         Optional[EncoderInput], Field(description="Encoder object to be added to the store")], db) -> JSONResponse:
         """Create a new encoder (Super User access required)."""
-        result = await db.execute(
-            select(encoder_table).where(or_(encoder_table.id == encoder_input.id)))
+        result = await db.execute(select(encoder_table).where(or_(encoder_table.id == encoder_input.id)))
         existing = result.scalars().first()
         if existing:
             raise HTTPException(status_code=400, detail="encoder already exists")
@@ -110,6 +107,7 @@ class EncodersService:
         await db.refresh(encoder)
 
         return JSONResponse(status_code=200, content={"message": f"Encoder {id} updated successfully"})
+
 
 def clean_input(data: dict) -> dict:
     bool_fields = ["scalable", "modeFileReq", "seqFileReq", "layersFileReq"]
