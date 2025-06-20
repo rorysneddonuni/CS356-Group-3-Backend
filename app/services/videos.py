@@ -40,6 +40,9 @@ class VideosService:
         if not bitDepth == 8 and not bitDepth == 12:
             raise HTTPException(status_code=400, detail="BitDepth must be either 8 or 12")
 
+        if not format == "yuv":
+            raise HTTPException(status_code=400, detail="Accpeted formats are: yuv")
+
         # Create and save experiment
         data = {"id": id, "groupId": groupId, "title": title, "path": path, "format": format,
                 "frameRate": frameRate, "res": res, "description": description, "bitDepth": bitDepth, "lastUpdated": now.strftime("%m/%d/%Y, %H:%M:%S")}
