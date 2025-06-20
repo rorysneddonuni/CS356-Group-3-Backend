@@ -69,6 +69,7 @@ async def get_experiments(
     current_user: User = Depends(require_minimum_role("user")),
 ) -> List[Experiment]:
     """List experiments for a given user."""
+    
     if current_user.role == "user":
         return await ExperimentsService().get_experiments(current_user.id, db)
     return await ExperimentsService().get_all_experiments(db)

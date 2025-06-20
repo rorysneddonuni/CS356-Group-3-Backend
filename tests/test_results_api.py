@@ -50,7 +50,7 @@ async def test_upload_results_file_success(client, db, isolate_upload_dir):
     assert (await db.execute(select(func.count()).select_from(ExperimentResult))).scalar_one() == 1
     db_result = (
         await db.execute(select(ExperimentResult).where(ExperimentResult.experiment_id == exp.id))).scalars().first()
-    assert db_result.filename == "result1.txt"
+    assert db_result.title == "result1.txt"
     assert Path(isolate_upload_dir + '/results/9000/result1.txt').exists()
 
 

@@ -28,8 +28,8 @@ class VideosService:
         VideosService.subclasses = VideosService.subclasses + (cls,)
 
     async def create_video(self, video: UploadFile, id: Optional[int], groupId: Optional[int],
-                           filename: Optional[StrictStr], video_type: Optional[StrictStr], frame_rate: Optional[int],
-                           resolution: Optional[StrictStr], db) -> Video:
+                           title: Optional[StrictStr], format: Optional[StrictStr], frameRate: Optional[int],
+                           res: Optional[StrictStr], description: Optional[StrictStr], bitDepth: Optional[int], db) -> Video:
         """Upload a new video to the infrastructure portal (Super User access required)."""
 
         result = await db.execute(select(input_video_table).where(or_(input_video_table.id == id)))
@@ -37,22 +37,28 @@ class VideosService:
         if existing:
             raise HTTPException(status_code=400, detail="Video already exists")
 
+        if not bitDepth == 8 and not bitDepth == 12:
+            raise HTTPException(status_code=400, detail="BitDepth must be either 8 or 12")
+
+        if not format == "yuv":
+            raise HTTPException(status_code=400, detail="Accpeted formats are: yuv")
+
         # Create and save experiment
-        data = {"id": id, "groupId": groupId, "filename": filename, "path": path, "video_type": video_type,
-                "frame_rate": frame_rate, "resolution": resolution, "created_date": now.strftime("%m/%d/%Y, %H:%M:%S")}
+        data = {"id": id, "groupId": groupId, "title": title, "path": path, "format": format,
+                "frameRate": frameRate, "res": res, "description": description, "bitDepth": bitDepth, "lastUpdated": now.strftime("%m/%d/%Y, %H:%M:%S")}
 
         db_obj = input_video_table(**data)
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
-        store_video_file(video.file, path, data["filename"])
+        store_video_file(video.file, path, data["title"] + "." + data["format"])
         return validate_video(db_obj)
 
     async def delete_video(self, video_id: StrictStr, db) -> JSONResponse:
         """Delete a specific video by ID (Super User access required)."""
         db_obj = await db.execute(select(input_video_table).filter(input_video_table.id == video_id))
         video_info = db_obj.scalars().first()
-        file = video_info.path + "\\" + video_info.filename
+        file = video_info.path + "\\" + video_info.title
 
         if not video_info:
             raise HTTPException(status_code=404, detail="Video not found")
@@ -69,7 +75,7 @@ class VideosService:
         db_obj = await db.execute(select(input_video_table).filter(input_video_table.id == video_id))
         video_info = db_obj.scalars().first()
         path = video_info.path
-        file = video_info.filename
+        file = video_info.title
         file_path_1 = path + "\\" + file
 
         if not video_info:
@@ -80,7 +86,7 @@ class VideosService:
 
         if not os.path.exists(path):
             raise HTTPException(status_code=404, detail="Error Retrieving File")
-        return FileResponse(path=file_path_1, media_type=video_info.video_type, filename=file)
+        return FileResponse(path=file_path_1, media_type=video_info.format, filename=file)
 
     async def get_videos(self, db) -> List[Video]:
         """Fetch a list of all available videos."""
