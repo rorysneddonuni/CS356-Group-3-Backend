@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import pprint
-from datetime import datetime
 from typing import Any, ClassVar, Dict, List, Optional, Tuple, Union
 
 from pydantic import BaseModel, Field, StrictInt, StrictStr
@@ -19,14 +18,16 @@ class Video(BaseModel):
     """  # noqa: E501
     id: Optional[StrictInt] = None
     groupId: Optional[StrictInt] = None
-    filename: Optional[StrictStr] = None
+    title: Optional[StrictStr] = None
+    description: Optional[StrictStr] = None
+    bitDepth: Optional[StrictInt] = None
     path: Optional[StrictStr] = None
-    video_type: Optional[StrictStr] = None
-    frame_rate: Optional[StrictInt] = Field(default=None, alias="frameRate")
-    resolution: Optional[StrictStr] = None
-    created_date: Optional[StrictStr] = Field(default=None, alias="createdDate")
-    __properties: ClassVar[List[str]] = ["id", "groupId", "filename", "path", "videoType", "frameRate", "resolution", "createdDate"]
-
+    format: Optional[StrictStr] = None
+    frameRate: Optional[StrictInt] = Field(default=None, alias="frameRate")
+    res: Optional[StrictStr] = None
+    lastUpdated: Optional[StrictStr] = Field(default=None, alias="createdDate")
+    __properties: ClassVar[List[str]] = ["id", "groupId", "title", "description", "bitDepth", "path", "format", "frameRate", "res",
+                                         "lastUpdated"]
 
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
 
@@ -66,6 +67,9 @@ class Video(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        _obj = cls.model_validate({"id": obj.get("id"), "groupId": obj.get("groupId"), "videoPath": obj.get("videoPath"), "frameRate": obj.get("frameRate"),
-                                   "resolution": obj.get("resolution"), "createdDate": obj.get("createdDate")})
+        _obj = cls.model_validate({"id": obj.get("id"), "groupId": obj.get("groupId"), "title": obj.get("title"),
+                                   "description": obj.get("description"), "bitDepth": obj.get("bitDepth"), "path": obj.get("path"),
+                                   "format": obj.get("format"),
+                                   "frameRate": obj.get("frameRate"), "res": obj.get("res"),
+                                   "lastUpdated": obj.get("lastUpdated")})
         return _obj
