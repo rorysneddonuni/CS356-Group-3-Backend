@@ -39,8 +39,8 @@ class VideosService:
         if existing:
             raise HTTPException(status_code=400, detail="Video with that title already exists")
 
-        if not bitDepth == 8 and not bitDepth == 12:
-            raise HTTPException(status_code=400, detail="BitDepth must be either 8 or 12")
+        if not bitDepth == 8 and not bitDepth == 10:
+            raise HTTPException(status_code=400, detail="BitDepth must be either 8 or 10")
 
         if not format == "yuv" and not format == "y4m":
             raise HTTPException(status_code=400, detail="Accepted formats are: yuv, y4m")
