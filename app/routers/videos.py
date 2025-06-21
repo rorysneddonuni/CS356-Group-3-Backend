@@ -25,13 +25,12 @@ router = APIRouter()
                                                   500: {"model": Error, "description": "Unexpected error"}, },
              tags=["videos"], summary="Create video", response_model_by_alias=True, )
 async def create_video(video_file: UploadFile = File(..., description="Video file to upload"),
-                       id: Optional[int] = Form(None), groupId: Optional[int] = Form(None),
                        title: Optional[StrictStr] = Form(None), format: Optional[StrictStr] = Form(None),
-                       frameRate: Optional[int] = Form(None), res: Optional[StrictStr] = Form(None), description: Optional[StrictStr] = Form(None), bitDepth: Optional[int] = Form(None),
+                       frameRate: Optional[int] = Form(None), resolution: Optional[StrictStr] = Form(None), description: Optional[StrictStr] = Form(None), bitDepth: Optional[int] = Form(None),
                        db: AsyncSession = Depends(get_db),
                        current_user: User = Depends(require_minimum_role("user"))) -> Video:
     """Upload a new video to the infrastructure portal (Super User access required)."""
-    return await VideosService().create_video(video_file, id, groupId, title, format, frameRate, res,description, bitDepth, db)
+    return await VideosService().create_video(video_file, title, format, frameRate, resolution, description, bitDepth, current_user, db)
 
 
 @router.delete("/infrastructure/videos/{id}", responses={200: {"model": Video, "description": "Video deleted"},

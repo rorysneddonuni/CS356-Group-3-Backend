@@ -13,9 +13,12 @@ from starlette.responses import JSONResponse, FileResponse
 from app.database.tables.videos import InputVideo as input_video_table
 from app.models.video import Video
 from tests.utility.validation import validate_video
+import uuid
+from app.models.user import User
 
 now = datetime.now()
 path = "app\database\\videos"
+
 
 from app.services.utility.video_file_handler import delete_video_file, store_video_file
 
@@ -27,25 +30,26 @@ class VideosService:
         super().__init_subclass__(**kwargs)
         VideosService.subclasses = VideosService.subclasses + (cls,)
 
-    async def create_video(self, video: UploadFile, id: Optional[int], groupId: Optional[int],
+    async def create_video(self, video: UploadFile,
                            title: Optional[StrictStr], format: Optional[StrictStr], frameRate: Optional[int],
-                           res: Optional[StrictStr], description: Optional[StrictStr], bitDepth: Optional[int], db) -> Video:
+                           resolution: Optional[StrictStr], description: Optional[StrictStr], bitDepth: Optional[int], current_user: User, db) -> Video:
         """Upload a new video to the infrastructure portal (Super User access required)."""
 
-        result = await db.execute(select(input_video_table).where(or_(input_video_table.id == id)))
+        result = await db.execute(select(input_video_table).where(or_(input_video_table.title == title)))
         existing = result.scalars().first()
         if existing:
-            raise HTTPException(status_code=400, detail="Video already exists")
+            raise HTTPException(status_code=400, detail="Video with that title already exists")
 
-        if not bitDepth == 8 and not bitDepth == 12:
-            raise HTTPException(status_code=400, detail="BitDepth must be either 8 or 12")
+        if not bitDepth == 8 and not bitDepth == 10:
+            raise HTTPException(status_code=400, detail="BitDepth must be either 8 or 10")
 
         if not format == "yuv" and not format == "y4m":
             raise HTTPException(status_code=400, detail="Accepted formats are: yuv, y4m")
+        id = str(uuid.uuid4())
 
-        # Create and save experiment
-        data = {"id": id, "groupId": groupId, "title": title, "path": path, "format": format,
-                "frameRate": frameRate, "res": res, "description": description, "bitDepth": bitDepth, "lastUpdated": now.strftime("%m/%d/%Y, %H:%M:%S")}
+        # Create and save video
+        data = {"id": id, "title": title, "path": path, "format": format,
+                "frameRate": frameRate, "resolution": resolution, "description": description, "bitDepth": bitDepth, "createdDate": now.strftime("%m/%d/%Y, %H:%M:%S"), "lastUpdatedBy": current_user.username}
 
         db_obj = input_video_table(**data)
         db.add(db_obj)
