@@ -76,17 +76,18 @@ class VideosService:
         video_info = db_obj.scalars().first()
         path = video_info.path
         file = video_info.title
-        file_path_1 = path + "\\" + file
+        format = video_info.format
+        file_path = path + "\\" + file + "." + format
 
         if not video_info:
             raise HTTPException(status_code=404, detail="Video not found")
 
-        if not file_path_1:
+        if not file_path:
             raise HTTPException(status_code=404, detail="No video files found")
 
         if not os.path.exists(path):
             raise HTTPException(status_code=404, detail="Error Retrieving File")
-        return FileResponse(path=file_path_1, media_type=video_info.format, filename=file)
+        return FileResponse(path=file_path, media_type=video_info.format, filename=file)
 
     async def get_videos(self, db) -> List[Video]:
         """Fetch a list of all available videos."""
