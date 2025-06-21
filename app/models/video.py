@@ -25,8 +25,9 @@ class Video(BaseModel):
     frameRate: Optional[StrictInt] = Field(default=None, alias="frameRate")
     resolution: Optional[StrictStr] = None
     createdDate: Optional[StrictStr] = Field(default=None, alias="createdDate")
+    lastUpdatedBy: Optional[StrictStr] = Field(default=None, alias="lastUpdatedBy")
     __properties: ClassVar[List[str]] = ["id", "title", "description", "bitDepth", "path", "format", "frameRate", "resolution",
-                                         "createdDate"]
+                                         "createdDate", "lastUpdatedBy"]
 
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
 
@@ -70,5 +71,5 @@ class Video(BaseModel):
                                    "description": obj.get("description"), "bitDepth": obj.get("bitDepth"), "path": obj.get("path"),
                                    "format": obj.get("format"),
                                    "frameRate": obj.get("frameRate"), "resolution": obj.get("resolution"),
-                                   "createdDate": obj.get("createdDate")})
+                                   "createdDate": obj.get("createdDate"), "lastUpdatedBy": obj.get("lastUpdatedBy")})
         return _obj

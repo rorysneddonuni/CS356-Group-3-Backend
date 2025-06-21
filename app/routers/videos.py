@@ -30,7 +30,7 @@ async def create_video(video_file: UploadFile = File(..., description="Video fil
                        db: AsyncSession = Depends(get_db),
                        current_user: User = Depends(require_minimum_role("user"))) -> Video:
     """Upload a new video to the infrastructure portal (Super User access required)."""
-    return await VideosService().create_video(video_file, title, format, frameRate, resolution, description, bitDepth, db)
+    return await VideosService().create_video(video_file, title, format, frameRate, resolution, description, bitDepth, current_user, db)
 
 
 @router.delete("/infrastructure/videos/{id}", responses={200: {"model": Video, "description": "Video deleted"},

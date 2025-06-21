@@ -14,6 +14,7 @@ from app.database.tables.videos import InputVideo as input_video_table
 from app.models.video import Video
 from tests.utility.validation import validate_video
 import uuid
+from app.models.user import User
 
 now = datetime.now()
 path = "app\database\\videos"
@@ -31,7 +32,7 @@ class VideosService:
 
     async def create_video(self, video: UploadFile,
                            title: Optional[StrictStr], format: Optional[StrictStr], frameRate: Optional[int],
-                           resolution: Optional[StrictStr], description: Optional[StrictStr], bitDepth: Optional[int], db) -> Video:
+                           resolution: Optional[StrictStr], description: Optional[StrictStr], bitDepth: Optional[int], current_user: User, db) -> Video:
         """Upload a new video to the infrastructure portal (Super User access required)."""
 
         result = await db.execute(select(input_video_table).where(or_(input_video_table.title == title)))
@@ -46,9 +47,9 @@ class VideosService:
             raise HTTPException(status_code=400, detail="Accepted formats are: yuv, y4m")
         id = str(uuid.uuid4())
 
-        # Create and save experiment
+        # Create and save video
         data = {"id": id, "title": title, "path": path, "format": format,
-                "frameRate": frameRate, "resolution": resolution, "description": description, "bitDepth": bitDepth, "createdDate": now.strftime("%m/%d/%Y, %H:%M:%S")}
+                "frameRate": frameRate, "resolution": resolution, "description": description, "bitDepth": bitDepth, "createdDate": now.strftime("%m/%d/%Y, %H:%M:%S"), "lastUpdatedBy": current_user.username}
 
         db_obj = input_video_table(**data)
         db.add(db_obj)

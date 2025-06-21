@@ -12,4 +12,5 @@ def validate_video(db_obj):
         "description": str(db_obj.description),
         "bitDepth": db_obj.bitDepth,
         "createdDate": str(db_obj.createdDate),
+        "lastUpdatedBy": str(db_obj.lastUpdatedBy),
     })

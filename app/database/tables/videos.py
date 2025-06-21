@@ -20,5 +20,6 @@ class InputVideo(Base):
     frameRate = Column(Integer)
     resolution = Column(String)
     createdDate = Column(String)
+    lastUpdatedBy = Column(String)
     description = Column(String)
     bitDepth = Column(Integer)
