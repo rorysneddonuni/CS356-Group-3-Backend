@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from sqlalchemy import Column, Integer, String
 
 from app.database.database import Base
@@ -15,8 +13,7 @@ class InputVideo(Base):
     """
     __tablename__ = "input_videos"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    groupId = Column(Integer)
+    id = Column(String, primary_key=True, index=True)
     title = Column(String, nullable=False)
     path = Column(String)
     format = Column(String)

@@ -16,8 +16,7 @@ class Video(BaseModel):
     """
     Video
     """  # noqa: E501
-    id: Optional[StrictInt] = None
-    groupId: Optional[StrictInt] = None
+    id: Optional[StrictStr] = None
     title: Optional[StrictStr] = None
     description: Optional[StrictStr] = None
     bitDepth: Optional[StrictInt] = None
@@ -26,7 +25,7 @@ class Video(BaseModel):
     frameRate: Optional[StrictInt] = Field(default=None, alias="frameRate")
     res: Optional[StrictStr] = None
     lastUpdated: Optional[StrictStr] = Field(default=None, alias="createdDate")
-    __properties: ClassVar[List[str]] = ["id", "groupId", "title", "description", "bitDepth", "path", "format", "frameRate", "res",
+    __properties: ClassVar[List[str]] = ["id", "title", "description", "bitDepth", "path", "format", "frameRate", "res",
                                          "lastUpdated"]
 
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
@@ -67,7 +66,7 @@ class Video(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        _obj = cls.model_validate({"id": obj.get("id"), "groupId": obj.get("groupId"), "title": obj.get("title"),
+        _obj = cls.model_validate({"id": obj.get("id"), "title": obj.get("title"),
                                    "description": obj.get("description"), "bitDepth": obj.get("bitDepth"), "path": obj.get("path"),
                                    "format": obj.get("format"),
                                    "frameRate": obj.get("frameRate"), "res": obj.get("res"),
