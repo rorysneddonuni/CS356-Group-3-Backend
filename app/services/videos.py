@@ -31,7 +31,7 @@ class VideosService:
 
     async def create_video(self, video: UploadFile,
                            title: Optional[StrictStr], format: Optional[StrictStr], frameRate: Optional[int],
-                           res: Optional[StrictStr], description: Optional[StrictStr], bitDepth: Optional[int], db) -> Video:
+                           resolution: Optional[StrictStr], description: Optional[StrictStr], bitDepth: Optional[int], db) -> Video:
         """Upload a new video to the infrastructure portal (Super User access required)."""
 
         result = await db.execute(select(input_video_table).where(or_(input_video_table.title == title)))
@@ -48,7 +48,7 @@ class VideosService:
 
         # Create and save experiment
         data = {"id": id, "title": title, "path": path, "format": format,
-                "frameRate": frameRate, "res": res, "description": description, "bitDepth": bitDepth, "lastUpdated": now.strftime("%m/%d/%Y, %H:%M:%S")}
+                "frameRate": frameRate, "resolution": resolution, "description": description, "bitDepth": bitDepth, "createdDate": now.strftime("%m/%d/%Y, %H:%M:%S")}
 
         db_obj = input_video_table(**data)
         db.add(db_obj)

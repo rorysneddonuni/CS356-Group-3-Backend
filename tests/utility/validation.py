@@ -8,8 +8,8 @@ def validate_video(db_obj):
         "path": db_obj.path,
         "format": str(db_obj.format),
         "frameRate": db_obj.frameRate,
-        "res": str(db_obj.res),
+        "resolution": str(db_obj.resolution),
         "description": str(db_obj.description),
         "bitDepth": db_obj.bitDepth,
-        "lastUpdated": str(db_obj.lastUpdated),
+        "createdDate": str(db_obj.createdDate),
     })
