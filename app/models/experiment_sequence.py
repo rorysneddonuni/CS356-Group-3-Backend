@@ -16,9 +16,9 @@ class ExperimentSequenceInput(BaseModel):
     """
     ExperimentSequenceInput
     """  # noqa: E501
-    network_topology_id: int = Field(alias="networkTopologyId")
-    network_disruption_profile_id: int = Field(alias="networkDisruptionProfileId")
-    encoding_parameters: dict = Field(alias="encodingParameters")
+    network_topology_id: int = Field(alias="NetworkTopologyId")
+    network_disruption_profile_id: int = Field(alias="NetworkDisruptionProfileId")
+    encoding_parameters: dict = Field(alias="EncodingParameters")
 
     __properties: ClassVar[List[str]] = ["networkTopologyId", "networkDisruptionProfileId", "encodingParameters"]
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (),
@@ -29,9 +29,9 @@ class ExperimentSequence(ExperimentSequenceInput):
     """
     ExperimentSequence
     """  # noqa: E501
-    sequence_id: int = Field(alias="sequenceId")
-    network_topology: Optional[Network] = Field(default=None, alias="networkTopologyId")
-    network_disruption_profile: Optional[Network] = Field(default=None, alias="networkDisruptionProfile")
+    sequence_id: int = Field(alias="SequenceId")
+    network_topology: Optional[Network] = Field(default=None, alias="NetworkTopologyId")
+    network_disruption_profile: Optional[Network] = Field(default=None, alias="NetworkDisruptionProfile")
 
     __properties: ClassVar[List[str]] = ["sequenceId", "networkTopologyId", "networkDisruptionProfileId",
                                          "encodingParameters", "networkDisruptionProfile", "networkTopology"]

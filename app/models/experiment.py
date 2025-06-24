@@ -24,11 +24,11 @@ class ExperimentInput(BaseModel):
     """
     ExperimentInput
     """  # noqa: E501
-    experiment_name: StrictStr = Field(alias="experimentName")
-    description: Optional[StrictStr] = Field(alias="description")
-    sequences: List[ExperimentSequenceInput] = Field(alias="sequences")
+    experiment_name: StrictStr = Field(alias="ExperimentName")
+    description: Optional[StrictStr] = Field(alias="Description")
+    sequences: List[ExperimentSequenceInput] = Field(alias="Sequences")
 
-    __properties: ClassVar[List[str]] = ["experimentName", "description", "sequences"]
+    __properties: ClassVar[List[str]] = ["ExperimentName", "Description", "Sequences"]
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (),
                     "from_attributes": True}
 
@@ -37,13 +37,13 @@ class Experiment(ExperimentInput):
     """
     Experiment
     """  # noqa: E501
-    id: Optional[int] = Field(alias="id")
-    created_at: Optional[datetime] = Field(default=None, alias="createdAt")
-    owner_id: int = Field(alias="ownerId")
-    status: Optional[ExperimentStatus] = Field(alias="status", default=ExperimentStatus.PENDING)
-    sequences: List[ExperimentSequence] = Field(alias="sequences")
+    id: Optional[int] = Field(alias="Id")
+    created_at: Optional[datetime] = Field(default=None, alias="CreatedAt")
+    owner_id: int = Field(alias="OwnerId")
+    status: Optional[ExperimentStatus] = Field(alias="Status", default=ExperimentStatus.PENDING)
+    sequences: List[ExperimentSequence] = Field(alias="Sequences")
 
-    __properties: ClassVar[List[str]] = ["id", "experimentName", "description", "sequences", "createdAt", "ownerId",
-                                         "status", "sequences"]
+    __properties: ClassVar[List[str]] = ["Id", "ExperimentName", "Description", "Sequences", "CreatedAt", "OwnerId",
+                                         "Status", "Sequences"]
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (),
                     "from_attributes": True}
