@@ -1,19 +1,16 @@
-import json
-from typing import Optional, ClassVar, Tuple
+from datetime import datetime
+from typing import Optional, ClassVar, Tuple, List
 
-from fastapi import HTTPException, Depends
-from fastapi.responses import JSONResponse
+from fastapi import HTTPException
 from pydantic import Field, StrictStr
-from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
+from sqlalchemy.orm import joinedload, selectinload
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
-from app.database.tables.experiments import Experiment as experiment_table
-from app.models.experiment import Experiment, ExperimentStatus
-from app.models.experiment_input import ExperimentInput
-from tests.utility.validation import validate_experiment
+from app.database.tables.experiments import Experiment as ExperimentTable, ExperimentSequence
+from app.models.experiment import Experiment, ExperimentStatus, ExperimentInput
 
 
 class ExperimentsService:
@@ -23,58 +20,71 @@ class ExperimentsService:
         super().__init_subclass__(**kwargs)
         ExperimentsService.subclasses = ExperimentsService.subclasses + (cls,)
 
-    async def create_experiment(self, experiment_input: Annotated[
+    async def create_experiment(self, user_id: str, experiment_input: Annotated[
         Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")],
                                 db: AsyncSession) -> Experiment:
         # Check if experiment name already exists
-        result = await db.execute(
-            select(experiment_table).where(or_(experiment_table.experiment_name == experiment_input.experiment_name)))
+        result = await db.execute(select(ExperimentTable).options(joinedload(ExperimentTable.sequences)).where(
+            ExperimentTable.experiment_name == experiment_input.experiment_name))
         existing = result.scalars().first()
         if existing:
             raise HTTPException(status_code=400, detail="Experiment name already exists")
         # Create and save experiment
-        data = experiment_input.model_dump(exclude_none=True, by_alias=False)
-        data["video_sources"] = json.dumps(data["video_sources"])
-        data["metrics_requested"] = json.dumps(data["metrics_requested"])
-        data["encoding_parameters"] = json.dumps(data["encoding_parameters"])
-        data["network_conditions"] = json.dumps(data["network_conditions"])
-        data["owner_id"] = "1"  # todo fix
-        data["status"] = ExperimentStatus.PENDING
-        db_obj = experiment_table(**data)
-        db.add(db_obj)
+        experiment = ExperimentTable(
+            **{**experiment_input.model_dump(), "owner_id": user_id, "status": ExperimentStatus.PENDING,
+               "created_at": datetime.now(), "sequences": []})
+        db.add(experiment)
         await db.commit()
-        await db.refresh(db_obj)
+        await db.refresh(experiment)
 
-        return validate_experiment(db_obj)
+        # Create nested sequences
+        for sequence in experiment_input.sequences:
+            db_sequence = ExperimentSequence(**{**sequence.model_dump(), "parent_experiment_id": experiment.id})
+            db.add(db_sequence)
+        await db.commit()
+
+        return Experiment.model_validate(await self.get_experiment(experiment.id, db))
 
     async def delete_experiment(self, experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")],
-                                db: AsyncSession) -> JSONResponse:
-        result = await db.execute(select(experiment_table).where(experiment_table.id == experiment_id))
-        db_obj = result.scalars().first()
-        if not db_obj:
-            raise HTTPException(status_code=404, detail="Experiment not found")
+        StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> JSONResponse:
+        db_experiment = await self.get_experiment(experiment_id, db)
 
-        await db.delete(db_obj)
+        await db.delete(db_experiment)
         await db.commit()
         return JSONResponse(status_code=200, content={"message": "Experiment deleted"})
 
     async def get_experiment(self, experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")],
-                             db: AsyncSession) -> Experiment:
-        result = await db.execute(select(experiment_table).where(experiment_table.id == experiment_id))
+        StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> Experiment:
+        result = await db.execute(select(ExperimentTable).options(
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_topology),
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_disruption_profile)).where(
+            ExperimentTable.id == experiment_id))
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="Experiment not found")
-        return validate_experiment(db_obj)
+        return Experiment.model_validate(db_obj, from_attributes=True)
 
     async def get_experiments(self, user_id: Annotated[StrictStr, Field(description="ID to uniquely identify a user.")],
-                              db: AsyncSession) -> Experiment:
-        result = await db.execute(select(experiment_table).where(experiment_table.owner_id == user_id))
-        db_obj = result.scalars().first()
-        if not db_obj:
+                              db: AsyncSession) -> List[Experiment]:
+        result = await db.execute(select(ExperimentTable).options(
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_topology),
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_disruption_profile)).where(
+            ExperimentTable.owner_id == user_id))
+        db_objs = result.unique().scalars().all()
+
+        if not db_objs:
             raise HTTPException(status_code=404, detail="No experiments found for user")
-        return validate_experiment(db_obj)
+
+        return [Experiment.model_validate(obj) for obj in db_objs]
+
+    async def get_all_experiments(self, db: AsyncSession) -> list[Experiment]:
+        result = await db.execute(select(ExperimentTable).options(
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_topology),
+            selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_disruption_profile)))
+        experiments = result.unique().scalars().all()
+        if not experiments:
+            raise HTTPException(status_code=404, detail="No experiments found")
+        return [Experiment.model_validate(exp) for exp in experiments]
 
     async def update_experiment(self, user_id: Annotated[
         StrictStr, Field(description="ID to uniquely identify the current user.")], experiment_id: Annotated[
@@ -82,26 +92,14 @@ class ExperimentsService:
         Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")],
                                 db: AsyncSession) -> Experiment:
         """This can only be done by the user who owns the experiment."""
-        result = await db.execute(select(experiment_table).where(experiment_table.id == experiment_id))
-        experiment = result.scalars().first()
+        experiment = await self.get_experiment(experiment_id, db)
 
-        if not experiment:
-            raise HTTPException(status_code=404, detail="Experiment not found")
         if not experiment.owner_id == user_id:
             raise HTTPException(status_code=400, detail="Only the owner of the experiment can update the experiment")
-        updates = experiment_input.model_dump(exclude_none=True)
 
-        updates["video_sources"] = json.dumps(updates["video_sources"])
-        updates["metrics_requested"] = json.dumps(updates["metrics_requested"])
-        updates["encoding_parameters"] = json.dumps(updates["encoding_parameters"])
-        updates["network_conditions"] = json.dumps(updates["network_conditions"])
-        updates["owner_id"] = "1"  # todo fix
-        updates["status"] = experiment_input.status
-
-        for field, value in updates.items():
+        for field, value in experiment_input.model_dump().items():
             setattr(experiment, field, value)
 
-        db.add(experiment)
         await db.commit()
         await db.refresh(experiment)
-        return validate_experiment(experiment)
+        return Experiment.model_validate(await self.get_experiment(experiment.id, db))
