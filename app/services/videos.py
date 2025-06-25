@@ -5,7 +5,6 @@ from typing import Optional, ClassVar, Tuple
 
 from fastapi import HTTPException, UploadFile
 from pydantic import StrictStr
-from sqlalchemy import or_
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from starlette.responses import JSONResponse, FileResponse
@@ -17,7 +16,7 @@ import uuid
 from app.models.user import User
 
 now = datetime.now()
-path = "app\database\\videos"
+path = "app\\database\\videos"
 
 
 from app.services.utility.video_file_handler import delete_video_file, store_video_file
@@ -35,11 +34,6 @@ class VideosService:
                            resolution: Optional[StrictStr], description: Optional[StrictStr], bitDepth: Optional[int], current_user: User, db) -> Video:
         """Upload a new video to the infrastructure portal (Super User access required)."""
 
-        result = await db.execute(select(input_video_table).where(or_(input_video_table.title == title)))
-        existing = result.scalars().first()
-        if existing:
-            raise HTTPException(status_code=400, detail="Video with that title already exists")
-
         if not bitDepth == 8 and not bitDepth == 10:
             raise HTTPException(status_code=400, detail="BitDepth must be either 8 or 10")
 
@@ -55,19 +49,20 @@ class VideosService:
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
-        store_video_file(video.file, path, data["title"] + "." + data["format"])
+        store_video_file(video.file, path, f"{data["title"]}_{data["id"]}.{data["format"]}")
         return validate_video(db_obj)
 
     async def delete_video(self, video_id: StrictStr, db) -> JSONResponse:
         """Delete a specific video by ID (Super User access required)."""
         db_obj = await db.execute(select(input_video_table).filter(input_video_table.id == video_id))
         video_info = db_obj.scalars().first()
-        file = video_info.path + "\\" + video_info.title
+        stored_filename = f"{video_info.title}_{video_info.id}.{video_info.format}"
+        file_path = f"{path}\\{stored_filename}"
 
         if not video_info:
             raise HTTPException(status_code=404, detail="Video not found")
 
-        delete_video_file(file)
+        delete_video_file(file_path)
 
         await db.delete(video_info)
         await db.commit()
@@ -79,8 +74,9 @@ class VideosService:
         db_obj = await db.execute(select(input_video_table).filter(input_video_table.id == video_id))
         video_info = db_obj.scalars().first()
         path = video_info.path
-        file = video_info.title + "." + video_info.format
-        file_path = path + "\\" + file
+        returned_filename = f"{video_info.title}.{video_info.format}"
+        stored_filename = f"{video_info.title}_{video_info.id}.{video_info.format}"
+        file_path = f"{path}\\{stored_filename}"
 
         if not video_info:
             raise HTTPException(status_code=404, detail="Video not found")
@@ -97,7 +93,7 @@ class VideosService:
         elif video_info.format == "yuv":
             media_type = "application/octet-stream"
 
-        return FileResponse(path=file_path, media_type=media_type, filename=file)
+        return FileResponse(path=file_path, media_type=media_type, filename=returned_filename)
 
     async def get_videos(self, db) -> List[Video]:
         """Fetch a list of all available videos."""
