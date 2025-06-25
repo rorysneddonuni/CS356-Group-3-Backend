@@ -98,8 +98,8 @@ class ExperimentsService:
             raise HTTPException(status_code=400, detail="Only the owner of the experiment can update the experiment")
 
         for field, value in experiment_input.model_dump().items():
-            setattr(experiment, field, value)
+            if value is not None and value != []:
+                setattr(experiment, field, value)
 
         await db.commit()
-        await db.refresh(experiment)
         return Experiment.model_validate(await self.get_experiment(experiment.id, db))
