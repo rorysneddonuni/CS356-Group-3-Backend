@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from typing import List
 from typing import Optional, ClassVar, Tuple
+import re
 
 from fastapi import HTTPException, UploadFile
 from pydantic import StrictStr
@@ -40,6 +41,10 @@ class VideosService:
         if not format == "yuv" and not format == "y4m":
             raise HTTPException(status_code=400, detail="Accepted formats are: yuv, y4m")
         id = str(uuid.uuid4())
+
+        res_pattern = r"[0-9]+x[0-9]+"
+        if not re.fullmatch(res_pattern, resolution):
+            raise HTTPException(status_code=400, detail="Resolution must follow the format widthxheight (Example 1920x1080)")
 
         # Create and save video
         data = {"id": id, "title": title, "path": path, "format": format,
