@@ -147,5 +147,30 @@ class UsersService:
         return Response(status_code=204)
 
 
+    async def update_password(self, email: str, hashed_password: str, db: AsyncSession) -> None:
+        logger.info(f"Updating password for: {email}")
+        result = await db.execute(
+            select(user_table).where(user_table.email == email)
+        )
+        db_obj = result.scalars().first()
+        if not db_obj:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        db_obj.password = hashed_password
+
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+
+    async def get_user_role_by_id(self, user_id: int, db: AsyncSession) -> str:
+        result = await db.execute(
+            select(user_table).where(user_table.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return user.role.value
+
+
 class SqliteUsersService(UsersService):
     pass
