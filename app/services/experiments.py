@@ -9,8 +9,10 @@ from sqlalchemy.orm import joinedload, selectinload
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
+from app.auth.dependencies import get_current_user
 from app.database.tables.experiments import Experiment as ExperimentTable, ExperimentSequence
 from app.models.experiment import Experiment, ExperimentStatus, ExperimentInput
+from app.services.users import UsersService
 
 
 class ExperimentsService:
@@ -86,20 +88,30 @@ class ExperimentsService:
             raise HTTPException(status_code=404, detail="No experiments found")
         return [Experiment.model_validate(exp) for exp in experiments]
 
-    async def update_experiment(self, user_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify the current user.")], experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")], experiment_input: Annotated[
-        Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")],
-                                db: AsyncSession) -> Experiment:
-        """This can only be done by the user who owns the experiment."""
-        experiment = await self.get_experiment(experiment_id, db)
+    async def update_experiment(self, user_id: int, experiment_id: str, experiment_input: ExperimentInput,
+                                db: AsyncSession):
+        result = await db.execute(
+            select(ExperimentTable).where(ExperimentTable.id == experiment_id)
+        )
+        experiment = result.scalar_one_or_none()
 
-        if not experiment.owner_id == user_id:
-            raise HTTPException(status_code=400, detail="Only the owner of the experiment can update the experiment")
+        if not experiment:
+            raise HTTPException(status_code=404, detail="Experiment not found")
 
-        for field, value in experiment_input.model_dump().items():
-            setattr(experiment, field, value)
+        if experiment.owner_id != user_id:
+            role = await UsersService().get_user_role_by_id(user_id=user_id, db=db)
+            if role not in ("admin", "super_admin"):
+                raise HTTPException(status_code=400, detail="Only the owner can update the experiment")
+
+        update_data = experiment_input.model_dump(exclude_unset=True, by_alias=False)
+
+        editable_fields = {"experiment_name", "description", "status"}
+
+        for field, value in update_data.items():
+            if field in editable_fields:
+                setattr(experiment, field, value)
 
         await db.commit()
         await db.refresh(experiment)
-        return Experiment.model_validate(await self.get_experiment(experiment.id, db))
+
+        return await self.get_experiment(experiment.id, db)

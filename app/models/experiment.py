@@ -27,10 +27,15 @@ class ExperimentInput(BaseModel):
     experiment_name: StrictStr = Field(alias="ExperimentName")
     description: Optional[StrictStr] = Field(alias="Description")
     sequences: List[ExperimentSequenceInput] = Field(alias="Sequences")
+    status: Optional[ExperimentStatus] = Field(alias="Status", default=None)
 
-    __properties: ClassVar[List[str]] = ["ExperimentName", "Description", "Sequences"]
-    model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (),
-                    "from_attributes": True}
+    __properties: ClassVar[List[str]] = ["ExperimentName", "Description", "Sequences", "Status"]
+    model_config = {
+        "populate_by_name": True,
+        "validate_assignment": True,
+        "protected_namespaces": (),
+        "from_attributes": True
+    }
 
 
 class Experiment(ExperimentInput):

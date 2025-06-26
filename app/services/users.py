@@ -162,6 +162,14 @@ class UsersService:
         await db.commit()
         await db.refresh(db_obj)
 
+    async def get_user_role_by_id(self, user_id: int, db: AsyncSession) -> str:
+        result = await db.execute(
+            select(user_table).where(user_table.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return user.role.value
 
 
 class SqliteUsersService(UsersService):
