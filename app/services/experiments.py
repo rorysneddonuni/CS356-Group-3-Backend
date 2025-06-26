@@ -111,7 +111,14 @@ class ExperimentsService:
             if field in editable_fields:
                 setattr(experiment, field, value)
 
-        await db.commit()
+        from sqlalchemy.exc import IntegrityError
+
+        try:
+            await db.commit()
+        except IntegrityError as e:
+            await db.rollback()
+            raise HTTPException(status_code=400, detail="Experiment name must be unique")
+
         await db.refresh(experiment)
 
         return await self.get_experiment(experiment.id, db)
