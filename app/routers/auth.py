@@ -7,6 +7,7 @@ from fastapi import (
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.auth.config import RESET_TOKEN_LINK
 from app.database.database import get_db
 from app.models.error import Error
 from app.models.login_request import LoginRequest
@@ -68,9 +69,8 @@ async def forgot_password(
         return {"message": "If an account exists, a reset link has been sent."}
 
     token = auth_service.create_reset_token(user.email)
-    print(token)
-    reset_link = f"https://example/reset-password?token={token}" # ToDo: frontend link
-    # EmailService.send_reset_password_email(user.email, reset_link)
+    reset_link = f"{RESET_TOKEN_LINK}?token={token}"
+    EmailService.send_reset_password_email(user.email, reset_link)
 
     return {"message": "If an account exists, a reset link has been sent."}
 
