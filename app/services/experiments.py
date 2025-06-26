@@ -9,7 +9,7 @@ from sqlalchemy.orm import joinedload, selectinload
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
-from app.auth.dependencies import get_current_user
+from sqlalchemy.exc import IntegrityError
 from app.database.tables.experiments import Experiment as ExperimentTable, ExperimentSequence
 from app.models.experiment import Experiment, ExperimentStatus, ExperimentInput
 from app.services.users import UsersService
@@ -105,20 +105,15 @@ class ExperimentsService:
 
         update_data = experiment_input.model_dump(exclude_unset=True, by_alias=False)
 
-        editable_fields = {"experiment_name", "description", "status"}
-
         for field, value in update_data.items():
-            if field in editable_fields:
+            if field in experiment.__table__.columns:
                 setattr(experiment, field, value)
-
-        from sqlalchemy.exc import IntegrityError
 
         try:
             await db.commit()
-        except IntegrityError as e:
+        except IntegrityError:
             await db.rollback()
             raise HTTPException(status_code=400, detail="Experiment name must be unique")
 
         await db.refresh(experiment)
-
         return await self.get_experiment(experiment.id, db)
