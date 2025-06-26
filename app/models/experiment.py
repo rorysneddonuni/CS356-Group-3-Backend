@@ -24,18 +24,14 @@ class ExperimentInput(BaseModel):
     """
     ExperimentInput
     """  # noqa: E501
-    experiment_name: StrictStr = Field(alias="ExperimentName")
-    description: Optional[StrictStr] = Field(alias="Description")
-    sequences: List[ExperimentSequenceInput] = Field(alias="Sequences")
-    status: Optional[ExperimentStatus] = Field(alias="Status", default=None)
+    experiment_name: Optional[StrictStr] = Field(None, alias="ExperimentName")
+    description: Optional[StrictStr] = Field(None, alias="Description")
+    status: Optional[ExperimentStatus] = Field(None, alias="Status")
+    sequences: Optional[List[ExperimentSequenceInput]] = Field([], alias="Sequences")
 
     __properties: ClassVar[List[str]] = ["ExperimentName", "Description", "Sequences", "Status"]
-    model_config = {
-        "populate_by_name": True,
-        "validate_assignment": True,
-        "protected_namespaces": (),
-        "from_attributes": True
-    }
+    model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (),
+                    "from_attributes": True}
 
 
 class Experiment(ExperimentInput):
@@ -45,7 +41,6 @@ class Experiment(ExperimentInput):
     id: Optional[int] = Field(alias="Id")
     created_at: Optional[datetime] = Field(default=None, alias="CreatedAt")
     owner_id: int = Field(alias="OwnerId")
-    status: Optional[ExperimentStatus] = Field(alias="Status", default=ExperimentStatus.PENDING)
     sequences: List[ExperimentSequence] = Field(alias="Sequences")
 
     __properties: ClassVar[List[str]] = ["Id", "ExperimentName", "Description", "Sequences", "CreatedAt", "OwnerId",
