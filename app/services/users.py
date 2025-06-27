@@ -1,5 +1,5 @@
 import logging
-from typing import ClassVar, Tuple, List
+from typing import ClassVar, Tuple, List, Optional
 
 from fastapi import HTTPException
 from fastapi.responses import Response
@@ -59,9 +59,14 @@ class UsersService:
         await db.refresh(db_obj)
         return User.model_validate(self.safe_dict(db_obj))
 
-    async def get_all_users(self, db: AsyncSession) -> List[User]:
+    async def get_all_users(self, db: AsyncSession, roles: Optional[List[str]] = None) -> List[User]:
         logger.info("Retrieving all users")
-        result = await db.execute(select(user_table))
+        query = select(user_table)
+
+        if roles:
+            query = query.where(user_table.role.in_(roles))
+
+        result = await db.execute(query)
         users: List[User] = []
         for obj in result.scalars().all():
             users.append(User.model_validate(self.safe_dict(obj)))
@@ -140,6 +145,31 @@ class UsersService:
         await db.delete(db_obj)
         await db.commit()
         return Response(status_code=204)
+
+
+    async def update_password(self, email: str, hashed_password: str, db: AsyncSession) -> None:
+        logger.info(f"Updating password for: {email}")
+        result = await db.execute(
+            select(user_table).where(user_table.email == email)
+        )
+        db_obj = result.scalars().first()
+        if not db_obj:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        db_obj.password = hashed_password
+
+        db.add(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+
+    async def get_user_role_by_id(self, user_id: int, db: AsyncSession) -> str:
+        result = await db.execute(
+            select(user_table).where(user_table.id == user_id)
+        )
+        user = result.scalar_one_or_none()
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        return user.role.value
 
 
 class SqliteUsersService(UsersService):

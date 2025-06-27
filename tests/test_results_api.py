@@ -10,7 +10,8 @@ from sqlalchemy import select, func
 from typing_extensions import Annotated  # noqa: F401
 
 from app.auth.dependencies import get_current_user
-from app.database.tables.experiments import Experiment, ExperimentResult
+from app.database.tables.experiments import Experiment
+from app.database.tables.results import ExperimentResult
 from app.models.error import Error  # noqa: F401
 from app.models.user import User
 from app.main import app

@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 
 from fastapi import APIRouter
 from fastapi import Body
@@ -10,8 +10,7 @@ from typing_extensions import Annotated
 
 from app.auth.dependencies import require_minimum_role
 from app.database.database import get_db
-from app.models.experiment import Experiment
-from app.models.experiment_input import ExperimentInput
+from app.models.experiment import Experiment, ExperimentInput, ExperimentUpdateInput
 from app.models.user import User
 from app.services.experiments import ExperimentsService
 
@@ -27,7 +26,7 @@ async def create_experiment(current_user: User = Depends(require_minimum_role("u
                                                                                                                   description="Experiment object that needs to be added to the store"),
                             db: AsyncSession = Depends(get_db)) -> Experiment:
     """Create a new experiment under a given user."""
-    return await ExperimentsService().create_experiment(experiment_input, db)
+    return await ExperimentsService().create_experiment(current_user.id, experiment_input, db)
 
 
 @router.delete("/experiments/{experiment_id}",
@@ -50,17 +49,31 @@ async def get_experiment(current_user: User = Depends(require_minimum_role("user
                                                                                    description="ID to uniquely identify an experiment."),
                          db: AsyncSession = Depends(get_db)) -> Experiment:
     """Get full details of an experiment by its unique ID."""
-    return await ExperimentsService().get_experiment(experiment_id, db)
+    return await ExperimentsService().get_experiment(experiment_id, db,
+                                                     user_id=current_user.id if current_user.role == "user" else None)
 
 
-@router.get("/experiments", responses={200: {"model": Experiment, "description": "Successful operation"},
-                                       404: {"description": "No experiments found for user"},
-                                       422: {"description": "Validation exception"}}, tags=["experiments"],
-            summary="List experiments.", response_model_by_alias=True, )
-async def get_experiments(db: AsyncSession = Depends(get_db),
-                          current_user: User = Depends(require_minimum_role("user"))) -> Experiment:
+@router.get(
+    "/experiments",
+    responses={
+        200: {"model": List[Experiment], "description": "Successful operation"},
+        404: {"description": "No experiments found for user"},
+        422: {"description": "Validation exception"},
+    },
+    tags=["experiments"],
+    summary="List experiments.",
+    response_model_by_alias=True,
+    response_model=List[Experiment],
+)
+async def get_experiments(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_minimum_role("user")),
+) -> List[Experiment]:
     """List experiments for a given user."""
-    return await ExperimentsService().get_experiments(current_user.id, db)
+    
+    if current_user.role == "user":
+        return await ExperimentsService().get_experiments(current_user.id, db)
+    return await ExperimentsService().get_all_experiments(db)
 
 
 @router.put("/experiments/{experiment_id}", responses={200: {"description": "successful operation"}, 400: {
@@ -71,7 +84,7 @@ async def get_experiments(db: AsyncSession = Depends(get_db),
 async def update_experiment(current_user: User = Depends(require_minimum_role("user")), experiment_id: Annotated[
     StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                    description="ID to uniquely identify an experiment."),
-                            experiment_input: Annotated[Optional[ExperimentInput], Field(
+                            experiment_input: Annotated[Optional[ExperimentUpdateInput], Field(
                                 description="Experiment object that needs to be added to the store")] = Body(None,
                                                                                                              description="Experiment object that needs to be added to the store"),
                             db: AsyncSession = Depends(get_db)) -> Experiment:

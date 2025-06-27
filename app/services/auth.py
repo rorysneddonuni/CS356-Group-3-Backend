@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta, timezone
 from typing import ClassVar, Tuple, Optional
 
-import jwt
+from jose import jwt, JWTError
 from fastapi import HTTPException, status
 from passlib.context import CryptContext
 
-from app.auth.config import ALGORITHM, SECRET_KEY
+from app.auth.config import ALGORITHM, SECRET_KEY, RESET_TOKEN_EXPIRE_MINUTES, RESET_PASSWORD_SECRET_KEY
 from app.models.login_request import LoginRequest
 from app.models.login_response import LoginResponse
 from app.models.user import User
@@ -59,3 +59,18 @@ class AuthService(BaseAuthApi):
 
         token = self.create_access_token(token_data)
         return LoginResponse(token=token)
+
+    def create_reset_token(self, email: str) -> str:
+        expire = datetime.now() + timedelta(minutes=RESET_TOKEN_EXPIRE_MINUTES)
+        to_encode = {"sub": email, "exp": expire}
+        return jwt.encode(to_encode, RESET_PASSWORD_SECRET_KEY, algorithm=ALGORITHM)
+
+    def verify_reset_token(self, token: str) -> str:
+        try:
+            payload = jwt.decode(token, RESET_PASSWORD_SECRET_KEY, algorithms=[ALGORITHM])
+            email = payload.get("sub")
+            if email is None:
+                raise HTTPException(status_code=400, detail="Invalid token")
+            return email
+        except JWTError:
+            raise HTTPException(status_code=400, detail="Invalid or expired token")

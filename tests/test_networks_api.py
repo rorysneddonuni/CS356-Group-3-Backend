@@ -5,8 +5,7 @@ from pydantic import Field, StrictStr  # noqa: F401
 from typing import Any, List, Optional  # noqa: F401
 from typing_extensions import Annotated  # noqa: F401
 from app.models.error import Error  # noqa: F401
-from app.models.network import Network  # noqa: F401
-from app.models.network_input import NetworkInput  # noqa: F401
+from app.models.network import NetworkInput  # noqa: F401
 
 
 def test_create_network(client: TestClient):
