@@ -17,6 +17,7 @@ from app.database.tables.experiments import Experiment
 from app.database.tables.results import ExperimentResult
 from app.models.info import Info
 from app.models.user import User
+from app.services.users import UsersService
 from app.services.utility.files import upload_file
 
 
@@ -52,6 +53,9 @@ class ResultsService:
 
         results = await db.execute(select(ExperimentResult).where(ExperimentResult.experiment_id == experiment_id,
                                                                   ExperimentResult.filename == file.filename))
+
+        if current_user.id != experiment.owner_id and current_user.role not in ('admin', 'super_user'):
+            raise HTTPException(status_code=403, detail="You are not authorized to access this resource")
 
         if results.scalars().first():
             raise HTTPException(status_code=400,
