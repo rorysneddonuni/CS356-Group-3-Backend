@@ -54,7 +54,8 @@ class VideosService:
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
-        store_video_file(video.file, path, f"{data["title"]}_{data["id"]}.{data["format"]}")
+        formatted_path = path.replace("\\", os.sep).replace("/", os.sep)
+        store_video_file(video.file, formatted_path, f"{data["title"]}_{data["id"]}.{data["format"]}")
         return validate_video(db_obj)
 
     async def delete_video(self, video_id: StrictStr, db) -> JSONResponse:
@@ -89,7 +90,7 @@ class VideosService:
         if not file_path:
             raise HTTPException(status_code=404, detail="No video files found")
 
-        if not os.path.exists(path):
+        if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="Error Retrieving File")
 
         media_type = ""
