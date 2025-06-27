@@ -17,7 +17,7 @@ import uuid
 from app.models.user import User
 
 now = datetime.now()
-path = "app\\database\\videos"
+path = "app\\database\\videos".replace("\\", os.sep)
 
 
 from app.services.utility.video_file_handler import delete_video_file, store_video_file
@@ -62,7 +62,7 @@ class VideosService:
         db_obj = await db.execute(select(input_video_table).filter(input_video_table.id == video_id))
         video_info = db_obj.scalars().first()
         stored_filename = f"{video_info.title}_{video_info.id}.{video_info.format}"
-        file_path = f"{path}\\{stored_filename}"
+        file_path = f"{path}\\{stored_filename}".replace("\\", os.sep)
 
         if not video_info:
             raise HTTPException(status_code=404, detail="Video not found")
@@ -81,7 +81,7 @@ class VideosService:
         path = video_info.path
         returned_filename = f"{video_info.title}.{video_info.format}"
         stored_filename = f"{video_info.title}_{video_info.id}.{video_info.format}"
-        file_path = f"{path}\\{stored_filename}"
+        file_path = f"{path}\\{stored_filename}".replace("\\", os.sep)
 
         if not video_info:
             raise HTTPException(status_code=404, detail="Video not found")
