@@ -3,15 +3,17 @@ from typing import Optional, ClassVar, Tuple, List
 
 from fastapi import HTTPException
 from pydantic import Field, StrictStr
+from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import joinedload, selectinload
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
-from app.auth.dependencies import get_current_user
+from sqlalchemy.exc import IntegrityError
 from app.database.tables.experiments import Experiment as ExperimentTable, ExperimentSequence
-from app.models.experiment import Experiment, ExperimentStatus, ExperimentInput
+from app.models.experiment import Experiment, ExperimentStatus, ExperimentInput, ExperimentUpdateInput
+from app.models.experiment_sequence import ExperimentSequenceInput
 from app.services.users import UsersService
 
 
@@ -88,13 +90,33 @@ class ExperimentsService:
             raise HTTPException(status_code=404, detail="No experiments found")
         return [Experiment.model_validate(exp) for exp in experiments]
 
-    async def update_experiment(self, user_id: int, experiment_id: str, experiment_input: ExperimentInput,
-                                db: AsyncSession):
+    async def update_experiment(self, user_id: int, experiment_id: str, experiment_input: ExperimentUpdateInput,
+                                db: AsyncSession) -> Experiment:
+        experiment = await self._get_experiment_for_update(experiment_id, user_id, db)
+
+        await self._check_name_uniqueness(experiment_input.experiment_name, experiment, db)
+
+        self._update_fields(experiment, experiment_input)
+
+        await self._handle_add_sequences(experiment_input.add_sequences, experiment.id, db)
+        await self._handle_remove_sequences(experiment_input.remove_sequence_ids, experiment.id, db)
+
+        try:
+            await db.commit()
+        except IntegrityError:
+            await db.rollback()
+            raise HTTPException(status_code=400, detail="Experiment name must be unique")
+
+        await db.refresh(experiment)
+        return await self.get_experiment(experiment.id, db)
+
+    async def _get_experiment_for_update(self, experiment_id: str, user_id: int, db: AsyncSession) -> ExperimentTable:
         result = await db.execute(
-            select(ExperimentTable).where(ExperimentTable.id == experiment_id)
+            select(ExperimentTable)
+            .options(selectinload(ExperimentTable.sequences))
+            .where(ExperimentTable.id == experiment_id)
         )
         experiment = result.scalar_one_or_none()
-
         if not experiment:
             raise HTTPException(status_code=404, detail="Experiment not found")
 
@@ -103,22 +125,40 @@ class ExperimentsService:
             if role not in ("admin", "super_admin"):
                 raise HTTPException(status_code=400, detail="Only the owner can update the experiment")
 
-        update_data = experiment_input.model_dump(exclude_unset=True, by_alias=False)
+        return experiment
 
-        editable_fields = {"experiment_name", "description", "status"}
+    async def _check_name_uniqueness(self, new_name: Optional[str], experiment: ExperimentTable, db: AsyncSession):
+        if new_name and new_name != experiment.experiment_name:
+            result = await db.execute(
+                select(ExperimentTable).where(ExperimentTable.experiment_name == new_name)
+            )
+            existing = result.scalar_one_or_none()
+            if existing and existing.id != experiment.id:
+                raise HTTPException(status_code=400, detail="Experiment name already exists")
 
-        for field, value in update_data.items():
-            if field in editable_fields:
-                setattr(experiment, field, value)
+    def _update_fields(self, experiment: ExperimentTable, input_data: ExperimentUpdateInput):
+        if input_data.experiment_name:
+            experiment.experiment_name = input_data.experiment_name
+        if input_data.description:
+            experiment.description = input_data.description
+        if input_data.status:
+            experiment.status = input_data.status
 
-        from sqlalchemy.exc import IntegrityError
+    async def _handle_add_sequences(self, sequences_data: List[ExperimentSequenceInput], experiment_id: int,
+                                    db: AsyncSession):
+        for seq_input in sequences_data:
+            new_seq = ExperimentSequence(
+                **seq_input.model_dump(exclude_unset=True, by_alias=False),
+                parent_experiment_id=experiment_id
+            )
+            db.add(new_seq)
 
-        try:
-            await db.commit()
-        except IntegrityError as e:
-            await db.rollback()
-            raise HTTPException(status_code=400, detail="Experiment name must be unique")
+    async def _handle_remove_sequences(self, sequence_ids: List[int], experiment_id: int, db: AsyncSession):
+        if sequence_ids:
+            await db.execute(
+                delete(ExperimentSequence).where(
+                    ExperimentSequence.sequence_id.in_(sequence_ids),
+                    ExperimentSequence.parent_experiment_id == experiment_id
+                )
+            )
 
-        await db.refresh(experiment)
-
-        return await self.get_experiment(experiment.id, db)

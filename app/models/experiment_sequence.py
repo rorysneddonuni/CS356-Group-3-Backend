@@ -13,9 +13,6 @@ except ImportError:
 
 
 class ExperimentSequenceInput(BaseModel):
-    """
-    ExperimentSequenceInput
-    """  # noqa: E501
     network_topology_id: int = Field(alias="NetworkTopologyId")
     network_disruption_profile_id: int = Field(alias="NetworkDisruptionProfileId")
     encoding_parameters: dict = Field(alias="EncodingParameters")

@@ -10,7 +10,7 @@ from typing_extensions import Annotated
 
 from app.auth.dependencies import require_minimum_role
 from app.database.database import get_db
-from app.models.experiment import Experiment, ExperimentInput
+from app.models.experiment import Experiment, ExperimentInput, ExperimentUpdateInput
 from app.models.user import User
 from app.services.experiments import ExperimentsService
 
@@ -83,7 +83,7 @@ async def get_experiments(
 async def update_experiment(current_user: User = Depends(require_minimum_role("user")), experiment_id: Annotated[
     StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                    description="ID to uniquely identify an experiment."),
-                            experiment_input: Annotated[Optional[ExperimentInput], Field(
+                            experiment_input: Annotated[Optional[ExperimentUpdateInput], Field(
                                 description="Experiment object that needs to be added to the store")] = Body(None,
                                                                                                              description="Experiment object that needs to be added to the store"),
                             db: AsyncSession = Depends(get_db)) -> Experiment:

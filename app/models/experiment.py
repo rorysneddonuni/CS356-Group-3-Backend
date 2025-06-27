@@ -34,6 +34,21 @@ class ExperimentInput(BaseModel):
                     "from_attributes": True}
 
 
+class ExperimentUpdateInput(BaseModel):
+    experiment_name: Optional[str] = Field(None, alias="ExperimentName")
+    description: Optional[str] = Field(None, alias="Description")
+    status: Optional[ExperimentStatus] = Field(None, alias="Status")
+    add_sequences: List[ExperimentSequenceInput] = Field(default_factory=list, alias="AddSequences")
+    remove_sequence_ids: List[int] = Field(default_factory=list, alias="RemoveSequenceIds")
+
+    model_config = {
+        "populate_by_name": True,
+        "protected_namespaces": (),
+        "from_attributes": True
+    }
+
+
+
 class Experiment(ExperimentInput):
     """
     Experiment
