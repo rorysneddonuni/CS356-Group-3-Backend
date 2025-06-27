@@ -58,7 +58,8 @@ class ExperimentsService:
         return JSONResponse(status_code=200, content={"message": "Experiment deleted"})
 
     async def get_experiment(self, experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> Experiment:
+        StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession,
+                             user_id: Optional[int] = None) -> Experiment:
         result = await db.execute(select(ExperimentTable).options(
             selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_topology),
             selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_disruption_profile)).where(
@@ -66,6 +67,10 @@ class ExperimentsService:
         db_obj = result.scalars().first()
         if not db_obj:
             raise HTTPException(status_code=404, detail="Experiment not found")
+
+        if user_id and db_obj.owner_id != user_id:
+            raise HTTPException(status_code=403, detail="Not authorized to access this experiment")
+
         return Experiment.model_validate(db_obj, from_attributes=True)
 
     async def get_experiments(self, user_id: Annotated[StrictStr, Field(description="ID to uniquely identify a user.")],

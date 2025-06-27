@@ -49,7 +49,8 @@ async def get_experiment(current_user: User = Depends(require_minimum_role("user
                                                                                    description="ID to uniquely identify an experiment."),
                          db: AsyncSession = Depends(get_db)) -> Experiment:
     """Get full details of an experiment by its unique ID."""
-    return await ExperimentsService().get_experiment(experiment_id, db)
+    return await ExperimentsService().get_experiment(experiment_id, db,
+                                                     user_id=current_user.id if current_user.role == "user" else None)
 
 
 @router.get(

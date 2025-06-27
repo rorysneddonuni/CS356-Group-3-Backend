@@ -17,6 +17,7 @@ from app.database.tables.experiments import Experiment
 from app.database.tables.results import ExperimentResult
 from app.models.info import Info
 from app.models.user import User
+from app.services.users import UsersService
 from app.services.utility.files import upload_file
 
 
