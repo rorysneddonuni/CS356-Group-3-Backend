@@ -31,7 +31,7 @@ class Experiment(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     experiment_name = Column(String(50), unique=True, nullable=False, index=True)
     description = Column(String(250), nullable=False)
-    owner_id = Column(String(250), nullable=False)
+    owner_id = Column(Integer, ForeignKey('user.id'))
     status = Column(Enum(ExperimentStatus))
     created_at = Column(String(250))
 
