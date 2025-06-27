@@ -37,4 +37,4 @@ async def upload_results(current_user: User = Depends(require_minimum_role("user
     """This can only be done by the logged-in user."""
     if not ResultsService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
-    return await ResultsService.subclasses[0]().upload_result(experiment_id, file, db, settings)
+    return await ResultsService.subclasses[0]().upload_result(experiment_id, file, db, settings, current_user)
