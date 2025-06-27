@@ -17,7 +17,7 @@ import uuid
 from app.models.user import User
 
 now = datetime.now()
-path = "app\\database\\videos"
+path = "app\\database\\videos".replace("\\", os.sep)
 
 
 from app.services.utility.video_file_handler import delete_video_file, store_video_file
@@ -54,7 +54,8 @@ class VideosService:
         db.add(db_obj)
         await db.commit()
         await db.refresh(db_obj)
-        store_video_file(video.file, path, f"{data["title"]}_{data["id"]}.{data["format"]}")
+        formatted_path = path.replace("\\", os.sep).replace("/", os.sep)
+        store_video_file(video.file, formatted_path, f"{data["title"]}_{data["id"]}.{data["format"]}")
         return validate_video(db_obj)
 
     async def delete_video(self, video_id: StrictStr, db) -> JSONResponse:
@@ -62,7 +63,7 @@ class VideosService:
         db_obj = await db.execute(select(input_video_table).filter(input_video_table.id == video_id))
         video_info = db_obj.scalars().first()
         stored_filename = f"{video_info.title}_{video_info.id}.{video_info.format}"
-        file_path = f"{path}\\{stored_filename}"
+        file_path = f"{path}\\{stored_filename}".replace("\\", os.sep)
 
         if not video_info:
             raise HTTPException(status_code=404, detail="Video not found")
@@ -81,7 +82,7 @@ class VideosService:
         path = video_info.path
         returned_filename = f"{video_info.title}.{video_info.format}"
         stored_filename = f"{video_info.title}_{video_info.id}.{video_info.format}"
-        file_path = f"{path}\\{stored_filename}"
+        file_path = f"{path}\\{stored_filename}".replace("\\", os.sep)
 
         if not video_info:
             raise HTTPException(status_code=404, detail="Video not found")
@@ -89,7 +90,7 @@ class VideosService:
         if not file_path:
             raise HTTPException(status_code=404, detail="No video files found")
 
-        if not os.path.exists(path):
+        if not os.path.exists(file_path):
             raise HTTPException(status_code=404, detail="Error Retrieving File")
 
         media_type = ""
