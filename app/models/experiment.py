@@ -24,10 +24,10 @@ class ExperimentInput(BaseModel):
     """
     ExperimentInput
     """  # noqa: E501
-    experiment_name: Optional[StrictStr] = Field(None, alias="ExperimentName")
-    description: Optional[StrictStr] = Field(None, alias="Description")
-    status: Optional[ExperimentStatus] = Field(None, alias="Status")
-    sequences: Optional[List[ExperimentSequenceInput]] = Field([], alias="Sequences")
+    experiment_name: StrictStr = Field(alias="ExperimentName")
+    description: StrictStr = Field(alias="Description")
+    status: ExperimentStatus = ExperimentStatus.PENDING
+    sequences: List[ExperimentSequenceInput] = Field(alias="Sequences")
 
     __properties: ClassVar[List[str]] = ["ExperimentName", "Description", "Sequences", "Status"]
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (),
