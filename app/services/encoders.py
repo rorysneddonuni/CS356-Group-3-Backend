@@ -1,9 +1,11 @@
 import json
+import uuid
 from typing import ClassVar, Tuple
 from typing import List, Optional
 
 from fastapi import HTTPException
 from pydantic import Field, StrictInt
+from pydantic.v1 import StrictStr
 from sqlalchemy import select, or_
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
@@ -23,26 +25,29 @@ class EncodersService:
     async def create_encoder(self, encoder_input: Annotated[
         Optional[EncoderInput], Field(description="Encoder object to be added to the store")], db) -> JSONResponse:
         """Create a new encoder (Super User access required)."""
-        result = await db.execute(select(encoder_table).where(or_(encoder_table.id == encoder_input.id)))
-        existing = result.scalars().first()
-        if existing:
-            raise HTTPException(status_code=400, detail="encoder already exists")
-
         # Create and save experiment
         data = encoder_input.model_dump(exclude_none=True, by_alias=False)
-        data["id"] = json.dumps(data["id"])
-        data["name"] = json.dumps(data["name"])
-        data["encoder_type"] = json.dumps(data["encoder_type"])
-        data["comment"] = json.dumps(data["comment"])
-        data["scalable"] = json.dumps(data["scalable"])
-        data["noOfLayers"] = json.dumps(data["noOfLayers"])
-        data["path"] = json.dumps(data["path"])
-        # data["filename"] = json.dumps(data["filename"])
-        data["modeFileReq"] = json.dumps(data["modeFileReq"])
-        # data["SeqFileReq"] = json.dumps(data["seqFileReq"])
-        data["layersFileReq"] = json.dumps(data["layersFileReq"])
 
-        data = clean_input(data)
+        data["id"] = str(uuid.uuid4())
+        data["video_id"] = json.dumps(data["video_id"])
+        data["duration"] = json.dumps(data["duration"])
+        data["frames_to_encode"] = json.dumps(data["frames_to_encode"])
+        data["fps"] = json.dumps(data["fps"])
+        data["res_width"] = json.dumps(data["res_width"])
+        data["res_height"] = json.dumps(data["res_height"])
+        data["input_file_title"] = json.dumps(data["input_file_title"])
+        data["encoder"] = json.dumps(data["encoder"])
+        data["encoder_type"] = json.dumps(data["encoder_type"])
+        data["bit_rate"] = json.dumps(data["bit_rate"])
+        data["yuv_format"] = json.dumps(data["yuv_format"])
+        data["encoder_mode"] = json.dumps(data["encoder_mode"])
+        data["quality"] = json.dumps(data["quality"])
+        data["bit_depth"] = json.dumps(data["bit_depth"])
+        data["infrared_period"] = json.dumps(data["infrared_period"])
+        data["b_frames"] = json.dumps(data["b_frames"])
+        data["max_no_layers"] = json.dumps(data["max_no_layers"])
+
+        # data = clean_input(data)
 
         db_obj = encoder_table(**data)
         db.add(db_obj)
@@ -50,7 +55,7 @@ class EncodersService:
         await db.refresh(db_obj)
         return JSONResponse(status_code=200, content={"message": "Encoder created successfully"})
 
-    async def delete_encoder(self, id: StrictInt, db) -> JSONResponse:
+    async def delete_encoder(self, id: StrictStr, db) -> JSONResponse:
         """Delete a specific encoder (Super User access required)."""
         db_obj = await db.execute(select(encoder_table).filter(encoder_table.id == id))
         encoder_info = db_obj.scalars().first()
@@ -62,7 +67,7 @@ class EncodersService:
         await db.commit()
         return JSONResponse(status_code=200, content={"message": "Encoder deleted"})
 
-    async def get_encoder(self, id: StrictInt, db) -> Encoder:
+    async def get_encoder(self, id: StrictStr, db) -> Encoder:
         """Fetch a specific encoder by ID."""
         db_obj = await db.execute(select(encoder_table).filter(encoder_table.id == id))
         encoder = db_obj.scalars().first()
@@ -82,7 +87,7 @@ class EncodersService:
 
         return all_encoders
 
-    async def update_encoder(self, id: StrictInt, db, encoder_input: Annotated[
+    async def update_encoder(self, id: StrictStr, db, encoder_input: Annotated[
         Optional[EncoderInput], Field(description="Encoder object to be added to the store")], ) -> JSONResponse:
         """Update an existing encoder (Super User access required)."""
         """This can only be done by the user who owns the experiment."""

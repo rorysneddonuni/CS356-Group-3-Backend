@@ -1,7 +1,7 @@
 from typing import List, Optional
 
 from fastapi import APIRouter, Body, Path, Depends
-from pydantic import Field, StrictInt
+from pydantic import Field, StrictInt, StrictStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
@@ -33,7 +33,7 @@ async def create_encoder(encoder_input: Annotated[
 @router.delete("/infrastructure/encoders/{id}", responses={200: {"model": Encoder, "description": "Encoder deleted"},
                                                            404: {"model": Error, "description": "Encoder not found"}},
                tags=["encoders"], summary="Delete encoder", response_model_by_alias=True)
-async def delete_encoder(id: StrictInt = Path(..., description=""), db: AsyncSession = Depends(get_db),
+async def delete_encoder(id: StrictStr = Path(..., description=""), db: AsyncSession = Depends(get_db),
                          current_user: User = Depends(require_minimum_role("super_admin"))) -> JSONResponse:
     """Delete a specific encoder (Super User access required)."""
     return await EncodersService().delete_encoder(id, db)
@@ -42,7 +42,7 @@ async def delete_encoder(id: StrictInt = Path(..., description=""), db: AsyncSes
 @router.get("/infrastructure/encoders/{id}", responses={200: {"model": Encoder, "description": "Encoder details"},
                                                         404: {"model": Error, "description": "Encoder not found"}, },
             tags=["encoders"], summary="Retrieve encoder", response_model_by_alias=True, )
-async def get_encoder(id: StrictInt = Path(..., description=""), db: AsyncSession = Depends(get_db),
+async def get_encoder(id: StrictStr = Path(..., description=""), db: AsyncSession = Depends(get_db),
                       current_user: User = Depends(require_minimum_role("user"))) -> Encoder:
     """Fetch a specific encoder by ID."""
     return await EncodersService().get_encoder(id, db)
@@ -62,7 +62,7 @@ async def get_encoders(db: AsyncSession = Depends(get_db),
                        404: {"model": Error, "description": "Encoder not found"},
                        422: {"description": "Validation exception"}}, tags=["encoders"], summary="Update encoder",
             response_model_by_alias=True, )
-async def update_encoder(id: StrictInt = Path(..., description=""), db: AsyncSession = Depends(get_db),
+async def update_encoder(id: StrictStr = Path(..., description=""), db: AsyncSession = Depends(get_db),
                          current_user: User = Depends(require_minimum_role("super_admin")), encoder_input: Annotated[
             Optional[EncoderInput], Field(description="Encoder object to be added to the store")] = Body(None,
                                                                                                          description="Encoder object to be added to the store"), ) -> JSONResponse:

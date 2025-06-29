@@ -16,19 +16,29 @@ class EncoderInput(BaseModel):
     """
     EncoderInput
     """  # noqa: E501
-    id: Optional[StrictInt] = None
-    name: Optional[StrictStr] = None
-    comment: Optional[StrictStr] = None
+    video_id: Optional[StrictStr] = None
+    duration: Optional[StrictInt] = None
+    frames_to_encode: Optional[StrictInt] = None
+    fps: Optional[StrictInt] = None
+    res_width: Optional[StrictInt] = None
+    res_height: Optional[StrictInt] = None
+    input_file_title: Optional[StrictStr] = None
+    encoder: Optional[StrictStr] = None
     encoder_type: Optional[StrictStr] = Field(default=None, alias="encoderType")
-    scalable: Optional[bool] = Field(default=False, alias="scalable")
-    noOfLayers: Optional[StrictInt] = Field(default=None, alias="noOfLayers")
-    path: Optional[StrictStr] = Field(default=False, alias="path")
-    filename: Optional[StrictStr] = Field(default=None, alias="filename")
-    modeFileReq: Optional[bool] = Field(default=False, alias="modeFileReq")
-    seqFileReq: Optional[bool] = Field(default=False, alias="seqFileReq")
-    layersFileReq: Optional[bool] = Field(default=False, alias="layersFileReq")
-    __properties: ClassVar[List[str]] = ["id", "name", "encoderType", "scalable", "noOfLayers", "path", "filename", "modeFileReq", "seqFileReq", "layersFilesReq"]
+    bit_rate: Optional[StrictInt] = None
+    yuv_format: Optional[StrictStr] = None
+    encoder_mode: Optional[StrictStr] = None
+    quality: Optional[StrictInt] = None
+    bit_depth: Optional[StrictInt] = None
+    infrared_period: Optional[StrictInt] = None
+    b_frames: Optional[StrictInt] = None
+    max_no_layers: Optional[StrictInt] = None
 
+    __properties: ClassVar[List[str]] = ["id", "video_id", "duration", "frames_to_encode", "fps", "res_width",
+                                         "res_height",
+                                         "input_file_title", "encoder", "encoder_type", "bit_rate", "yuv_format",
+                                         "encoder_mode",
+                                         "quality", "bit_depth", "infrared_period", "b_frames", "max_no_layers"]
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
 
     def to_str(self) -> str:
@@ -67,6 +77,8 @@ class EncoderInput(BaseModel):
         if not isinstance(obj, dict):
             return cls.model_validate(obj)
 
-        _obj = cls.model_validate({"id": obj.get("id"), "name": obj.get("name"), "encoderType": obj.get("encoderType"),
-                                   "encoderCode": obj.get("encoderCode"), "layers": obj.get("layers")})
+        _obj = cls.model_validate({"id": obj.get("id"), "video_id": obj.get("video_id"), "duration": obj.get("duration"), "frames_to_encode": obj.get("frames_to_encode"), "fps": obj.get("fps"), "res_width": obj.get("res_width"),
+                                   "res_height": obj.get("res_height"), "input_file_title": obj.get("input_file_title"), "encoder": obj.get("encoder"), "encoder_type": obj.get("encoder_type"), "bit_rate": obj.get("bit_rate"),
+                                   "yuv_format": obj.get("yuv_format"), "encoder_mode": obj.get("encoder_mode"), "quality": obj.get("quality"), "bit_depth": obj.get("bit_depth"), "infrared_period": obj.get("infrared_period"),
+                                   "b_frames": obj.get("b_frames"), "max_no_layers": obj.get("max_no_layers")})
         return _obj
