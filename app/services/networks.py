@@ -35,7 +35,7 @@ class NetworksService:
                              db: AsyncSession) -> NetworkTable:
         """Upload a new network (Super User access required)."""
         db_network = await self.get_network(id, db)
-        for key, value in network_input.model_dump(by_alias=True).items():
+        for key, value in network_input.model_dump(by_alias=False).items():
             setattr(db_network, key, value)
         await db.commit()
         await db.refresh(db_network)
@@ -46,13 +46,13 @@ class NetworksService:
         db_network = await self.get_network(id, db)
         await db.delete(db_network)
         await db.commit()
-        return Info("Network deleted successfully")
+        return Info(message="Network deleted successfully")
 
     async def get_network(self, id: StrictStr, db: AsyncSession) -> NetworkTable:
         """Fetch a specific network by ID."""
-        result = await db.execute(select(NetworkTable).where(NetworkTable.id == id))
+        result = await db.execute(select(NetworkTable).where(NetworkTable.network_profile_id == id))
         if (response := result.scalars().first()) is not None:
-            return Network.model_validate(response)
+            return response
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Network not found")
 
     async def get_networks(self, db: AsyncSession) -> List[NetworkTable]:
