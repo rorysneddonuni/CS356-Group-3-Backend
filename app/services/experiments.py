@@ -50,8 +50,8 @@ class ExperimentsService:
         return Experiment.model_validate(await self.get_experiment(experiment.id, db))
 
     async def delete_experiment(self, experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> JSONResponse:
-        db_experiment = await self.get_experiment(experiment_id, db)
+        StrictStr, Field(description="ID to uniquely identify an experiment.")], user_id: str, db: AsyncSession) -> JSONResponse:
+        db_experiment = await self._get_experiment_for_update(experiment_id, user_id, db)
 
         await db.delete(db_experiment)
         await db.commit()
@@ -82,7 +82,7 @@ class ExperimentsService:
         db_objs = result.unique().scalars().all()
 
         if not db_objs:
-            raise HTTPException(status_code=404, detail="No experiments found for user")
+            return []
 
         return [Experiment.model_validate(obj) for obj in db_objs]
 
@@ -91,8 +91,6 @@ class ExperimentsService:
             selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_topology),
             selectinload(ExperimentTable.sequences).selectinload(ExperimentSequence.network_disruption_profile)))
         experiments = result.unique().scalars().all()
-        if not experiments:
-            raise HTTPException(status_code=404, detail="No experiments found")
         return [Experiment.model_validate(exp) for exp in experiments]
 
     async def update_experiment(self, user_id: int, experiment_id: str, experiment_input: ExperimentUpdateInput,
