@@ -70,7 +70,7 @@ async def forgot_password(
 
     token = auth_service.create_reset_token(user.email)
     reset_link = f"{RESET_TOKEN_LINK}?token={token}"
-    EmailService.send_reset_password_email(user.email, reset_link)
+    EmailService.send_reset_password_email(user.email, user.first_name, reset_link)
 
     return {"message": "If an account exists, a reset link has been sent."}
 

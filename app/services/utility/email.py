@@ -6,15 +6,17 @@ from app.config import email_conf
 
 class EmailService:
     @staticmethod
-    def send_reset_password_email(to_email: str, reset_link: str):
+    def send_reset_password_email(to_email: str, first_name: str, reset_link: str):
         subject = "Your Password Reset Request"
         body = f"""
-        <p>Hello,</p>
-        <p>You requested a password reset. Click the link below to reset your password:</p>
+        <p>Hi {first_name},</p>
+        <p>Thanks for requesting a password reset.</p>
+        <p>Please use the below link to access the portal and reset your password.</p>
         <p><a href="{reset_link}">{reset_link}</a></p>
-        <p>If you didn't request this, you can safely ignore this email.</p>
+        <p>If you need any help, please reach out to us at {email_conf.EMAIL_FROM} and we will be happy to help.</p>
         <br>
-        <p>– {email_conf.EMAIL_FROM_NAME}</p>
+        <p>Thanks,</p>
+        <p>The OneClick Team</p>
         """
 
         EmailService._send_email(to_email, subject, body)
