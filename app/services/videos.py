@@ -107,6 +107,6 @@ class VideosService:
         all_videos = db_obj.scalars()
 
         if not all_videos:
-            raise HTTPException(status_code=404, detail="No videos found")
+            return []
 
         return all_videos

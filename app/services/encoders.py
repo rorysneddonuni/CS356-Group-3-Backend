@@ -78,7 +78,7 @@ class EncodersService:
         all_encoders = db_obj.scalars()
 
         if not all_encoders:
-            raise HTTPException(status_code=404, detail="No encoders found")
+            return []
 
         return all_encoders
 

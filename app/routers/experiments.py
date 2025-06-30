@@ -37,7 +37,7 @@ async def delete_experiment(current_user: User = Depends(require_minimum_role("a
                                                                                    description="ID to uniquely identify an experiment."),
                             db: AsyncSession = Depends(get_db)) -> JSONResponse:
     """Delete an experiment."""
-    return await ExperimentsService().delete_experiment(experiment_id, db)
+    return await ExperimentsService().delete_experiment(experiment_id, current_user.id, db)
 
 
 @router.get("/experiments/{experiment_id}",
