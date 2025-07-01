@@ -1,9 +1,11 @@
 import json
+import uuid
 from typing import ClassVar, Tuple
 from typing import List, Optional
 
 from fastapi import HTTPException
 from pydantic import Field, StrictInt
+from pydantic.v1 import StrictStr
 from sqlalchemy import select, or_
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
@@ -30,16 +32,14 @@ class EncodersService:
 
         # Create and save experiment
         data = encoder_input.model_dump(exclude_none=True, by_alias=False)
-        data["id"] = json.dumps(data["id"])
+        data["id"] = str(uuid.uuid4())
         data["name"] = json.dumps(data["name"])
         data["encoder_type"] = json.dumps(data["encoder_type"])
-        data["comment"] = json.dumps(data["comment"])
+        data["description"] = json.dumps(data["description"])
         data["scalable"] = json.dumps(data["scalable"])
-        data["noOfLayers"] = json.dumps(data["noOfLayers"])
-        data["path"] = json.dumps(data["path"])
-        # data["filename"] = json.dumps(data["filename"])
+        data["maxLayers"] = json.dumps(data["maxLayers"])
         data["modeFileReq"] = json.dumps(data["modeFileReq"])
-        # data["SeqFileReq"] = json.dumps(data["seqFileReq"])
+        data["seqFileReq"] = json.dumps(data["seqFileReq"])
         data["layersFileReq"] = json.dumps(data["layersFileReq"])
 
         data = clean_input(data)
@@ -50,7 +50,7 @@ class EncodersService:
         await db.refresh(db_obj)
         return JSONResponse(status_code=200, content={"message": "Encoder created successfully"})
 
-    async def delete_encoder(self, id: StrictInt, db) -> JSONResponse:
+    async def delete_encoder(self, id: StrictStr, db) -> JSONResponse:
         """Delete a specific encoder (Super User access required)."""
         db_obj = await db.execute(select(encoder_table).filter(encoder_table.id == id))
         encoder_info = db_obj.scalars().first()
@@ -62,7 +62,7 @@ class EncodersService:
         await db.commit()
         return JSONResponse(status_code=200, content={"message": "Encoder deleted"})
 
-    async def get_encoder(self, id: StrictInt, db) -> Encoder:
+    async def get_encoder(self, id: StrictStr, db) -> Encoder:
         """Fetch a specific encoder by ID."""
         db_obj = await db.execute(select(encoder_table).filter(encoder_table.id == id))
         encoder = db_obj.scalars().first()
@@ -82,7 +82,7 @@ class EncodersService:
 
         return all_encoders
 
-    async def update_encoder(self, id: StrictInt, db, encoder_input: Annotated[
+    async def update_encoder(self, id: StrictStr, db, encoder_input: Annotated[
         Optional[EncoderInput], Field(description="Encoder object to be added to the store")], ) -> JSONResponse:
         """Update an existing encoder (Super User access required)."""
         """This can only be done by the user who owns the experiment."""
@@ -111,7 +111,7 @@ class EncodersService:
 
 def clean_input(data: dict) -> dict:
     bool_fields = ["scalable", "modeFileReq", "seqFileReq", "layersFileReq"]
-    int_fields = ["id", "noOfLayers"]
+    int_fields = ["noOfLayers"]
 
     cleaned = {}
     for key, val in data.items():
