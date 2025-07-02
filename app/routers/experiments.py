@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
-from app.auth.dependencies import require_minimum_role
+from app.auth.dependencies import require_minimum_role, user_dependency, super_admin_dependency
 from app.database.database import get_db
 from app.models.experiment import Experiment, ExperimentInput, ExperimentUpdateInput
 from app.models.user import User
@@ -21,7 +21,7 @@ router = APIRouter()
                                         400: {"description": "Invalid input"},
                                         422: {"description": "Validation exception"}}, tags=["experiments"],
              summary="Create a new experiment.", response_model_by_alias=True, )
-async def create_experiment(current_user: User = Depends(require_minimum_role("user")), experiment_input: Annotated[
+async def create_experiment(current_user: User = Depends(user_dependency), experiment_input: Annotated[
     Optional[ExperimentInput], Field(description="Experiment object that needs to be added to the store")] = Body(None,
                                                                                                                   description="Experiment object that needs to be added to the store"),
                             db: AsyncSession = Depends(get_db)) -> Experiment:
@@ -32,7 +32,7 @@ async def create_experiment(current_user: User = Depends(require_minimum_role("u
 @router.delete("/experiments/{experiment_id}",
                responses={200: {"description": "Experiment deleted"}, 400: {"description": "Invalid experiment value"}},
                tags=["experiments"], summary="Delete an experiment.", response_model_by_alias=True, )
-async def delete_experiment(current_user: User = Depends(require_minimum_role("admin")), experiment_id: Annotated[
+async def delete_experiment(current_user: User = Depends(super_admin_dependency), experiment_id: Annotated[
     StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                    description="ID to uniquely identify an experiment."),
                             db: AsyncSession = Depends(get_db)) -> JSONResponse:
@@ -44,7 +44,7 @@ async def delete_experiment(current_user: User = Depends(require_minimum_role("a
             responses={200: {"model": Experiment, "description": "Successful operation"},
                        404: {"description": "Experiment not found"}}, tags=["experiments"],
             summary="Get experiment by ID.", response_model_by_alias=True, )
-async def get_experiment(current_user: User = Depends(require_minimum_role("user")), experiment_id: Annotated[
+async def get_experiment(current_user: User = Depends(user_dependency), experiment_id: Annotated[
     StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                    description="ID to uniquely identify an experiment."),
                          db: AsyncSession = Depends(get_db)) -> Experiment:
@@ -67,7 +67,7 @@ async def get_experiment(current_user: User = Depends(require_minimum_role("user
 )
 async def get_experiments(
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_minimum_role("user")),
+    current_user: User = Depends(user_dependency),
 ) -> List[Experiment]:
     """List experiments for a given user."""
     
@@ -81,7 +81,7 @@ async def get_experiments(
                                                        404: {"description": "experiment not found"},
                                                        422: {"description": "Validation exception"}},
             tags=["experiments"], summary="Update an experiment.", response_model_by_alias=True, )
-async def update_experiment(current_user: User = Depends(require_minimum_role("user")), experiment_id: Annotated[
+async def update_experiment(current_user: User = Depends(user_dependency), experiment_id: Annotated[
     StrictStr, Field(description="ID to uniquely identify an experiment.")] = Path(...,
                                                                                    description="ID to uniquely identify an experiment."),
                             experiment_input: Annotated[Optional[ExperimentUpdateInput], Field(

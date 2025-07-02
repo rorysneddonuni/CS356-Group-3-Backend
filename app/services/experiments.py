@@ -49,9 +49,14 @@ class ExperimentsService:
 
         return Experiment.model_validate(await self.get_experiment(experiment.id, db))
 
-    async def delete_experiment(self, experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")], db: AsyncSession) -> JSONResponse:
-        db_experiment = await self.get_experiment(experiment_id, db)
+    async def delete_experiment(self, experiment_id: str, db: AsyncSession):
+        result = await db.execute(
+            select(ExperimentTable).where(ExperimentTable.id == experiment_id)
+        )
+        db_experiment = result.scalar_one_or_none()
+
+        if not db_experiment:
+            raise HTTPException(status_code=404, detail="Experiment not found")
 
         await db.delete(db_experiment)
         await db.commit()

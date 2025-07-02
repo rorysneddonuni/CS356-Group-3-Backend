@@ -4,11 +4,6 @@ from typing import ClassVar, List, Optional
 
 from pydantic import BaseModel, Field, StrictInt, StrictStr
 
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
-
 
 class NetworkInput(BaseModel):
     network_name: Optional[StrictStr] = Field(None, alias="networkName")

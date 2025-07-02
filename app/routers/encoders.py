@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse
 from typing_extensions import Annotated
 
-from app.auth.dependencies import require_minimum_role
+from app.auth.dependencies import require_minimum_role, super_admin_dependency, user_dependency
 from app.database.database import get_db
 from app.models.encoder import Encoder
 from app.models.encoder_input import EncoderInput
@@ -25,7 +25,7 @@ async def create_encoder(encoder_input: Annotated[
     Optional[EncoderInput], Field(description="Encoder object to be added to the store")] = Body(None,
                                                                                                  description="Encoder object to be added to the store"),
                          db: AsyncSession = Depends(get_db),
-                         current_user: User = Depends(require_minimum_role("super_admin"))) -> JSONResponse:
+                         current_user: User = Depends(super_admin_dependency)) -> JSONResponse:
     """Create a new encoder (Super User access required)."""
     return await EncodersService().create_encoder(encoder_input, db)
 
@@ -34,7 +34,7 @@ async def create_encoder(encoder_input: Annotated[
                                                            404: {"model": Error, "description": "Encoder not found"}},
                tags=["encoders"], summary="Delete encoder", response_model_by_alias=True)
 async def delete_encoder(id: StrictInt = Path(..., description=""), db: AsyncSession = Depends(get_db),
-                         current_user: User = Depends(require_minimum_role("super_admin"))) -> JSONResponse:
+                         current_user: User = Depends(super_admin_dependency)) -> JSONResponse:
     """Delete a specific encoder (Super User access required)."""
     return await EncodersService().delete_encoder(id, db)
 
@@ -43,7 +43,7 @@ async def delete_encoder(id: StrictInt = Path(..., description=""), db: AsyncSes
                                                         404: {"model": Error, "description": "Encoder not found"}, },
             tags=["encoders"], summary="Retrieve encoder", response_model_by_alias=True, )
 async def get_encoder(id: StrictInt = Path(..., description=""), db: AsyncSession = Depends(get_db),
-                      current_user: User = Depends(require_minimum_role("user"))) -> Encoder:
+                      current_user: User = Depends(user_dependency)) -> Encoder:
     """Fetch a specific encoder by ID."""
     return await EncodersService().get_encoder(id, db)
 
@@ -52,7 +52,7 @@ async def get_encoder(id: StrictInt = Path(..., description=""), db: AsyncSessio
                                                    404: {"model": Error, "description": "No encoders found"}},
             tags=["encoders"], summary="Retrieve encoder list", response_model_by_alias=True, )
 async def get_encoders(db: AsyncSession = Depends(get_db),
-                       current_user: User = Depends(require_minimum_role("user"))) -> List[Encoder]:
+                       current_user: User = Depends(user_dependency)) -> List[Encoder]:
     """Fetch a list of all encoders."""
     return await EncodersService().get_encoders(db)
 
@@ -63,7 +63,7 @@ async def get_encoders(db: AsyncSession = Depends(get_db),
                        422: {"description": "Validation exception"}}, tags=["encoders"], summary="Update encoder",
             response_model_by_alias=True, )
 async def update_encoder(id: StrictInt = Path(..., description=""), db: AsyncSession = Depends(get_db),
-                         current_user: User = Depends(require_minimum_role("super_admin")), encoder_input: Annotated[
+                         current_user: User = Depends(super_admin_dependency), encoder_input: Annotated[
             Optional[EncoderInput], Field(description="Encoder object to be added to the store")] = Body(None,
                                                                                                          description="Encoder object to be added to the store"), ) -> JSONResponse:
     """Update an existing encoder (Super User access required)."""

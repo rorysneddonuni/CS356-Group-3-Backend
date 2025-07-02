@@ -7,7 +7,7 @@ from pydantic import StrictStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette.responses import JSONResponse, FileResponse
 
-from app.auth.dependencies import require_minimum_role
+from app.auth.dependencies import require_minimum_role, super_admin_dependency, user_dependency
 from app.database.database import get_db
 from app.models.error import Error
 from app.models.user import User
@@ -28,7 +28,7 @@ async def create_video(video_file: UploadFile = File(..., description="Video fil
                        title: Optional[StrictStr] = Form(None), format: Optional[StrictStr] = Form(None),
                        frameRate: Optional[int] = Form(None), resolution: Optional[StrictStr] = Form(None), description: Optional[StrictStr] = Form(None), bitDepth: Optional[int] = Form(None),
                        db: AsyncSession = Depends(get_db),
-                       current_user: User = Depends(require_minimum_role("user"))) -> Video:
+                       current_user: User = Depends(user_dependency)) -> Video:
     """Upload a new video to the infrastructure portal (Super User access required)."""
     return await VideosService().create_video(video_file, title, format, frameRate, resolution, description, bitDepth, current_user, db)
 
@@ -37,7 +37,7 @@ async def create_video(video_file: UploadFile = File(..., description="Video fil
                                                          404: {"model": Error, "description": "Video not found"}},
                tags=["videos"], summary="Delete video", response_model_by_alias=True, )
 async def delete_video(id: StrictStr = Path(..., description=""), db: AsyncSession = Depends(get_db),
-                       current_user: User = Depends(require_minimum_role("super_admin"))) -> JSONResponse:
+                       current_user: User = Depends(super_admin_dependency)) -> JSONResponse:
     """Delete a specific video by ID (Super User access required)."""
     return await VideosService().delete_video(id, db)
 
@@ -46,7 +46,7 @@ async def delete_video(id: StrictStr = Path(..., description=""), db: AsyncSessi
                                                       404: {"model": Error, "description": "Video not found"}},
             tags=["videos"], summary="Retrieve video", response_model_by_alias=True, response_class=FileResponse)
 async def get_video(id: StrictStr = Path(..., description=""), db: AsyncSession = Depends(get_db),
-                    current_user: User = Depends(require_minimum_role("user"))) -> FileResponse:
+                    current_user: User = Depends(user_dependency)) -> FileResponse:
     """Fetch a specific video by ID."""
     return await VideosService().get_video(id, db)
 
@@ -54,7 +54,7 @@ async def get_video(id: StrictStr = Path(..., description=""), db: AsyncSession 
 @router.get("/infrastructure/videos", responses={200: {"model": List[Video], "description": "A list of videos"},
                                                  404: {"description": "No videos found"}}, tags=["videos"],
             summary="Retrieve videos list", response_model_by_alias=True, )
-async def get_videos(db: AsyncSession = Depends(get_db), current_user: User = Depends(require_minimum_role("user"))) -> \
+async def get_videos(db: AsyncSession = Depends(get_db), current_user: User = Depends(user_dependency)) -> \
         List[Video]:
     """Fetch a list of all available videos."""
     return await VideosService().get_videos(db)
