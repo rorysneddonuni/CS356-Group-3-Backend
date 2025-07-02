@@ -74,7 +74,7 @@ class ResultsService:
         if not experiment:
             raise HTTPException(status_code=404, detail="Experiment not found")
 
-        if current_user.id != experiment.owner_id and current_user.role not in ('admin', 'super_user'):
+        if current_user.id != experiment.owner_id and current_user.role not in ('admin', 'super_admin'):
             raise HTTPException(status_code=403, detail="You are not authorized to access this resource")
 
         return experiment
