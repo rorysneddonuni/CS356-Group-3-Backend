@@ -2,8 +2,9 @@ from datetime import datetime
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.tables.experiments import Experiment
+from app.database.tables.experiments import Experiment, ExperimentSequence
 from app.models.experiment import ExperimentStatus
 
 
@@ -67,21 +68,22 @@ class TestExperimentsRoutes:
         assert update_resp.json()["ExperimentName"] == "Updated Name"
         assert update_resp.json()["status"] == "COMPLETE"
 
-    async def test_delete_experiment(self, async_client: AsyncClient, db):
-        experiment = Experiment(
+    async def test_delete_experiment(self, async_client: AsyncClient, db: AsyncSession):
+        exp = Experiment(
             experiment_name="ToDelete",
             description="Should be deleted",
-            owner_id=1,
+            owner_id=2,
             status=ExperimentStatus.PENDING,
-            created_at=datetime.now().isoformat(),
+            created_at=datetime.now().isoformat()
         )
 
-        db.add(experiment)
+        db.add(exp)
         await db.commit()
-        await db.refresh(experiment)
+        await db.refresh(exp)
 
-        response = await async_client.delete(f"/experiments/{experiment.id}")
-        assert response.status_code == 200
-        assert response.json()["message"] == "Experiment deleted"
+        delete_resp = await async_client.delete(f"/experiments/{exp.id}")
+        assert delete_resp.status_code == 200
+        assert delete_resp.json()["message"] == "Experiment deleted"
 
-        assert await db.get(Experiment, experiment.id) is None
+        result = await db.get(Experiment, exp.id)
+        assert result is None

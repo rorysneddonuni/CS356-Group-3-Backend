@@ -16,18 +16,16 @@ class EncoderInput(BaseModel):
     """
     EncoderInput
     """  # noqa: E501
-    id: Optional[StrictInt] = None
+    id: Optional[StrictStr] = None
     name: Optional[StrictStr] = None
-    comment: Optional[StrictStr] = None
+    description: Optional[StrictStr] = None
     encoder_type: Optional[StrictStr] = Field(default=None, alias="encoderType")
     scalable: Optional[bool] = Field(default=False, alias="scalable")
-    noOfLayers: Optional[StrictInt] = Field(default=None, alias="noOfLayers")
-    path: Optional[StrictStr] = Field(default=False, alias="path")
-    filename: Optional[StrictStr] = Field(default=None, alias="filename")
+    maxLayers: Optional[StrictInt] = Field(default=None, alias="maxLayers")
     modeFileReq: Optional[bool] = Field(default=False, alias="modeFileReq")
     seqFileReq: Optional[bool] = Field(default=False, alias="seqFileReq")
     layersFileReq: Optional[bool] = Field(default=False, alias="layersFileReq")
-    __properties: ClassVar[List[str]] = ["id", "name", "encoderType", "scalable", "noOfLayers", "path", "filename", "modeFileReq", "seqFileReq", "layersFilesReq"]
+    __properties: ClassVar[List[str]] = ["id", "name", "description", "encoderType", "scalable", "maxLayers", "path", "filename", "modeFileReq", "seqFileReq", "layersFilesReq"]
 
     model_config = {"populate_by_name": True, "validate_assignment": True, "protected_namespaces": (), }
 

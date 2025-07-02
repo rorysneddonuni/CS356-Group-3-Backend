@@ -6,14 +6,12 @@ from app.database.database import Base
 class Encoders(Base):
     __tablename__ = "encoders"
 
-    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    id = Column(String, primary_key=True, index=True)
     name = Column(String, nullable=False)
     encoder_type = Column(String)
-    comment = Column(String)
+    description = Column(String)
     scalable = Column(Boolean, default=False)
-    noOfLayers = Column(Integer)
-    path = Column(String)
-    filename = Column(String)
+    maxLayers = Column(Integer)
     modeFileReq = Column(Boolean, default=False)
     seqFileReq = Column(Boolean, default=False)
     layersFileReq = Column(Boolean, default=False)

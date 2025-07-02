@@ -1,4 +1,6 @@
-from typing import List
+from typing import ClassVar, Tuple, List
+from typing import Optional
+
 from fastapi import HTTPException
 from pydantic import Field, StrictStr
 from sqlalchemy import select

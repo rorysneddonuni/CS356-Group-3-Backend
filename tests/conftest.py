@@ -7,11 +7,13 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI, UploadFile
 from httpx import AsyncClient, ASGITransport
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 
 from app.auth.dependencies import user_dependency, super_admin_dependency, get_current_user
 from app.config.settings import Settings, get_settings
 from app.database.database import Base, get_db
+from app.database.tables.encoders import Encoders
 from app.main import app as application
 from app.models.encoder_input import EncoderInput
 from app.models.experiment import Experiment, ExperimentStatus
@@ -148,12 +150,12 @@ def user_factory(async_client: AsyncClient):
 @pytest.fixture
 def test_encoder_json():
     return {
-        "id": 101,
+        "id": "101",
         "name": "Test Encoder",
-        "encoderType": "h264",
-        "comment": "Test encoder entry",
+        "encoder_type": "h264",
+        "description": "Test encoder entry",
         "scalable": False,
-        "noOfLayers": 1,
+        "maxLayers": 1,
         "path": "/usr/bin/encoder",
         "filename": "encoder.exe",
         "modeFileReq": False,
@@ -161,12 +163,21 @@ def test_encoder_json():
         "layersFileReq": False
     }
 
+from sqlalchemy import select
+from app.database.tables.encoders import Encoders as EncoderTable
+
 @pytest.fixture
-def encoder_factory(db: AsyncSession):
+def encoder_factory(async_client: AsyncClient, db: AsyncSession):
     async def _create_encoder(data: dict):
-        encoder_input = EncoderInput(**data)
-        return await EncodersService().create_encoder(encoder_input, db)
+        response = await async_client.post("/infrastructure/encoders", json=data)
+        assert response.status_code == 200, f"Encoder creation failed: {response.text}"
+
+        result = await db.execute(select(EncoderTable).where(EncoderTable.name == data["name"]))
+        encoder = result.scalars().first()
+        assert encoder is not None, "Encoder not found in DB after creation"
+        return encoder.id
     return _create_encoder
+
 
 
 # --- Experiments ---
