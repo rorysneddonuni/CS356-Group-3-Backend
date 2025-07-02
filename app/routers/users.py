@@ -5,7 +5,8 @@ from pydantic import StrictStr
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import Annotated
 
-from app.auth.dependencies import require_minimum_role, get_current_user, has_access_to_user
+from app.auth.dependencies import get_current_user, has_access_to_user, super_admin_dependency, \
+    user_dependency
 from app.database.database import get_db
 from app.models.error import Error
 from app.models.user import User
@@ -54,7 +55,7 @@ async def create_user(
     response_model_by_alias=True,
 )
 async def get_all_users(
-    current_user: User = Depends(require_minimum_role("user")),
+    current_user: User = Depends(user_dependency),
     db: AsyncSession = Depends(get_db),
     roles: Optional[List[str]] = Query(default=None, description="Filter users by roles"),
 ) -> List[User]:
@@ -113,8 +114,10 @@ async def update_user(
         Body(..., description="Fields to update; only provided fields will change"),
     ],
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_minimum_role("admin")),
+    current_user: User = Depends(user_dependency),
 ) -> User:
+    if not has_access_to_user(current_user, username):
+        raise HTTPException(status_code=401, detail="You can only access your own data")
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")
     return await UsersService.subclasses[0]().update_user(username, user_input, db)
@@ -133,7 +136,7 @@ async def update_user(
 async def delete_user(
     username: Annotated[StrictStr, Path(..., description="The username to delete")],
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(require_minimum_role("super_admin")),
+    current_user: User = Depends(super_admin_dependency),
 ) -> None:
     if not UsersService.subclasses:
         raise HTTPException(status_code=501, detail="Not implemented")

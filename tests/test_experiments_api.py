@@ -1,144 +1,89 @@
+from datetime import datetime
+
 import pytest
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
 
-from pydantic import Field, StrictBytes, StrictStr  # noqa: F401
-from typing import Any, List, Optional, Tuple, Union  # noqa: F401
-from typing_extensions import Annotated  # noqa: F401
+from app.database.tables.experiments import Experiment, ExperimentSequence
+from app.models.experiment import ExperimentStatus
 
-from app.auth.dependencies import get_current_user
-from app.database.tables.network import Network
-from app.models.error import Error  # noqa: F401
-from app.models.experiment import Experiment  # noqa: F401
-from app.main import app
-from tests.test_results_api import mock_user
+
+@pytest.fixture
+def experiment_input_payload():
+    return {
+        "ExperimentName": "IntegrationTestExp",
+        "Description": "Created in test",
+        "Status": "PENDING",
+        "Sequences": [
+            {
+                "NetworkTopologyId": 1,
+                "NetworkDisruptionProfileId": 1,
+                "EncodingParameters": {"codec": "h264"}
+            }
+        ]
+    }
 
 
 @pytest.mark.asyncio
-async def test_create_experiment(client: TestClient, db):
-    """Test case for create_experiment
+class TestExperimentsRoutes:
 
-    Create a new experiment.
-    """
-    app.dependency_overrides[get_current_user] = lambda: mock_user()
-    db_network = Network(**{"name": "test", "packet_loss": 10, "delay": 10, "jitter": 1, "bandwidth": "0"})
-    db.add(db_network)
-    await db.commit()
-    await db.refresh(db_network)
+    async def test_create_experiment_success(self, async_client: AsyncClient, experiment_input_payload):
+        response = await async_client.post("/experiments", json=experiment_input_payload)
 
-    experiment_input = {
-        "experimentName": "Streaming Test A",
-        "description": "Testing encoding and network parameters",
-        "videoSources": ["intro.mp4", "main.mp4"],
-        "encodingParameters": {
-            "codec": "h265",
-            "bitrate": "3000",
-            "resolution": "1280x720"
-        },
-        "networkDisruptionProfileId": db_network.id,
-        "metricsRequested": ["latency", "packetLoss", "bitrate"]
-    }
-    headers = {
-    }
-    # uncomment below to make a request
-    response = client.request(
-        "POST",
-        "/experiments",
-        headers=headers,
-        json=experiment_input,
-    )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["ExperimentName"] == experiment_input_payload["ExperimentName"]
+        assert data["status"] == "PENDING"
+        assert len(data["Sequences"]) == 1
 
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+    async def test_create_duplicate_experiment_name(self, async_client: AsyncClient, experiment_input_payload):
+        await async_client.post("/experiments", json=experiment_input_payload)
 
+        response = await async_client.post("/experiments", json=experiment_input_payload)
+        assert response.status_code == 400
+        assert "already exists" in response.json()["detail"].lower()
 
-def test_delete_experiment(client: TestClient):
-    """Test case for delete_experiment
+    async def test_get_experiment_by_id(self, async_client: AsyncClient, experiment_input_payload):
+        create_resp = await async_client.post("/experiments", json=experiment_input_payload)
+        exp_id = create_resp.json()["Id"]
 
-    Delete an experiment.
-    """
+        response = await async_client.get(f"/experiments/{exp_id}")
+        assert response.status_code == 200
+        assert response.json()["Id"] == exp_id
 
-    headers = {
-    }
-    # uncomment below to make a request
-    response = client.request(
-        "DELETE",
-        "/experiments/{experimentId}".format(experimentId='1'),
-        headers=headers,
-    )
+    async def test_update_experiment_fields(self, async_client: AsyncClient, experiment_input_payload):
+        create_resp = await async_client.post("/experiments", json=experiment_input_payload)
+        exp_id = create_resp.json()["Id"]
 
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+        update_payload = {
+            "ExperimentName": "Updated Name",
+            "Description": "New Desc",
+            "Status": "COMPLETE",
+            "AddSequences": [],
+            "RemoveSequenceIds": []
+        }
 
+        update_resp = await async_client.put(f"/experiments/{exp_id}", json=update_payload)
+        assert update_resp.status_code == 200
+        assert update_resp.json()["ExperimentName"] == "Updated Name"
+        assert update_resp.json()["status"] == "COMPLETE"
 
-def test_get_experiment(client: TestClient):
-    """Test case for get_experiment
+    async def test_delete_experiment(self, async_client: AsyncClient, db: AsyncSession):
+        exp = Experiment(
+            experiment_name="ToDelete",
+            description="Should be deleted",
+            owner_id=2,
+            status=ExperimentStatus.PENDING,
+            created_at=datetime.now().isoformat()
+        )
 
-    Get experiment by ID.
-    """
+        db.add(exp)
+        await db.commit()
+        await db.refresh(exp)
 
-    headers = {
-    }
-    # uncomment below to make a request
-    response = client.request(
-        "GET",
-        "/experiments/{experimentId}".format(experimentId='1'),
-        headers=headers,
-    )
+        delete_resp = await async_client.delete(f"/experiments/{exp.id}")
+        assert delete_resp.status_code == 200
+        assert delete_resp.json()["message"] == "Experiment deleted"
 
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
-
-
-
-def test_get_experiments(client: TestClient):
-    """Test case for get_experiments
-
-    List experiments.
-    """
-
-    headers = {
-    }
-    # uncomment below to make a request
-    response = client.request(
-        "GET",
-        "/experiments",
-        headers=headers,
-    )
-
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
-
-
-def test_update_experiment(client: TestClient):
-    """Test case for update_experiment
-
-    Update an experiment.
-    """
-    experiment_input = {
-        "experimentName": "Streaming Test A",
-        "description": "Testing encoding and network parameters",
-        "videoSources": ["intro.mp4", "main.mp4"],
-        "encodingParameters": {
-            "codec": "h265",
-            "bitrate": "3000",
-            "resolution": "1280x720"
-        },
-        "networkConditions": {
-            "packet_loss": "0.01",
-            "delay": "100"
-        },
-        "metricsRequested": ["latency", "packetLoss", "bitrate"]
-    }
-
-    headers = {
-    }
-    # uncomment below to make a request
-    response = client.request(
-        "PUT",
-        "/experiments/{experimentId}".format(experimentId='experiment_id_example'),
-        headers=headers,
-        json=experiment_input,
-    )
-
-    # uncomment below to assert the status code of the HTTP response
-    assert response.status_code == 200
+        result = await db.get(Experiment, exp.id)
+        assert result is None

@@ -1,24 +1,25 @@
 import io
+import os
 import zipfile
+from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Optional, Tuple, Union  # noqa: F401
 
 import pytest
-from fastapi.testclient import TestClient
-from pydantic import Field, StrictBytes, StrictStr  # noqa: F401
+import pytest_asyncio
+from httpx import AsyncClient
 from sqlalchemy import select, func
-from typing_extensions import Annotated  # noqa: F401
+from starlette.status import HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
 
-from app.auth.dependencies import get_current_user
-from app.database.tables.experiments import Experiment
+from app.database.tables.experiments import Experiment as ExperimentTable, Experiment
 from app.database.tables.results import ExperimentResult
-from app.models.error import Error  # noqa: F401
+from app.models.experiment import ExperimentStatus
 from app.models.user import User
-from app.main import app
+from app.routers.results import user_dependency
 
 
-def mock_user():
-    return User(
+@pytest.fixture(autouse=True)
+def override_user_dep(app):
+    mock_user = User(
         id=1,
         username="testuser",
         password="fake",
@@ -27,89 +28,129 @@ def mock_user():
         first_name="Test",
         last_name="User"
     )
+    app.dependency_overrides[user_dependency] = lambda: mock_user
 
 
-
-@pytest.mark.asyncio
-async def test_upload_results_file_success(client, db, isolate_upload_dir):
-    app.dependency_overrides[get_current_user] = lambda: mock_user()
-
-    expected_id = 9000
-    exp = Experiment(id=expected_id, name="UploadTest", description="Test upload results", owner_id="1", status="TEST",
-                     codec="", bitrate="", resolution="")
-    db.add(exp)
-    await db.commit()
-
-    file_content = b"Some result data"
-    response = client.post(f"/experiments/{exp.id}/results",
-                           files={"file": ("result1.txt", io.BytesIO(file_content), "text/plain")})
-    assert response.status_code == 200
-    data = response.json()
-    assert data["message"] == "File uploaded successfully"
-
-    assert (await db.execute(select(func.count()).select_from(ExperimentResult))).scalar_one() == 1
-    db_result = (
-        await db.execute(select(ExperimentResult).where(ExperimentResult.experiment_id == exp.id))).scalars().first()
-    assert db_result.title == "result1.txt"
-    assert Path(isolate_upload_dir + '/results/9000/result1.txt').exists()
+@pytest_asyncio.fixture
+async def create_experiment(db):
+    async def _create():
+        exp = ExperimentTable(
+            experiment_name="UploadTest",
+            description="Test upload results",
+            owner_id=1,
+            status=ExperimentStatus.COMPLETE,
+            created_at=datetime.now().isoformat()
+        )
+        db.add(exp)
+        await db.commit()
+        await db.refresh(exp)
+        return exp
+    return _create
 
 
 @pytest.mark.asyncio
-async def test_get_experiment_results(client: TestClient, db, isolate_upload_dir):
-    """Test case for get_experiment_results
+class TestResultsRoutes:
 
-    Get results for an experiment.
-    """
-    app.dependency_overrides[get_current_user] = lambda: mock_user()
-    expected_id = 9000
-    exp = Experiment(id=expected_id, name="UploadTest", description="Test upload results", owner_id="1", status="TEST",
-                     codec="", bitrate="", resolution="")
-    db.add(exp)
-    await db.commit()
+    async def test_upload_results_file_success(self, async_client: AsyncClient, db, isolate_upload_dir, create_experiment):
+        experiment = await create_experiment()
 
-    uploaded_filenames = []
-    for i in range(2):
-        filename = f"file{i}.txt"
-        file_content = f"content of file {i}".encode()
-        uploaded_filenames.append(filename)
+        file_content = b"Some result data"
+        response = await async_client.post(
+            f"/experiments/{experiment.id}/results",
+            files={"file": ("result1.txt", io.BytesIO(file_content), "text/plain")}
+        )
 
-        response = client.post(f"/experiments/{exp.id}/results",
-                               files={"file": (filename, io.BytesIO(file_content), "text/plain")}, )
-        assert response.status_code == 200
+        assert response.status_code == HTTP_200_OK
+        assert response.json()["message"] == "File uploaded successfully"
 
-    zip_response = client.get(f"/experiments/{exp.id}/results")
-    assert zip_response.status_code == 200
-    assert zip_response.headers["content-type"] == "application/zip"
+        result_count = (await db.execute(select(func.count()).select_from(ExperimentResult))).scalar_one()
+        assert result_count == 1
 
-    with zipfile.ZipFile(io.BytesIO(zip_response.content)) as z:
-        names_in_zip = z.namelist()
-        assert set(names_in_zip) == set(uploaded_filenames)
+        db_result = (
+            await db.execute(select(ExperimentResult).where(ExperimentResult.experiment_id == experiment.id))
+        ).scalars().first()
 
-        for name in names_in_zip:
-            with z.open(name) as f:
-                content = f.read().decode()
-                assert f"content of file" in content
+        assert db_result.filename == "result1.txt"
 
+        expected_path = Path(isolate_upload_dir) / "results" / str(experiment.id) / "result1.txt"
+        assert expected_path.exists()
 
-@pytest.mark.asyncio
-async def test_upload_duplicate_filename(client, db):
-    app.dependency_overrides[get_current_user] = lambda: mock_user()
-    # Create an experiment
-    exp = Experiment(name="DuplicateTest", description="Test upload results", owner_id="1", status="TEST", codec="",
-                     bitrate="", resolution="")
-    db.add(exp)
-    await db.commit()
+    async def test_get_experiment_results(self, async_client: AsyncClient, db, isolate_upload_dir):
+        exp = Experiment(
+            id=9001,
+            experiment_name="GetTest",
+            description="Test get results",
+            owner_id=1,
+            status=ExperimentStatus.COMPLETE,
+            created_at=datetime.now().isoformat()
+        )
+        db.add(exp)
+        await db.commit()
 
-    filename = "result.csv"
-    content = b"test data"
+        uploaded_filenames = []
+        for i in range(2):
+            filename = f"file{i}.txt"
+            content = f"content of file {i}".encode()
+            uploaded_filenames.append(filename)
 
-    # First upload
-    response1 = client.post(f"/experiments/{exp.id}/results",
-                            files={"file": (filename, io.BytesIO(content), "text/csv")}, )
-    assert response1.status_code == 200
+            result_path = os.path.join(isolate_upload_dir, "results", str(exp.id))
+            os.makedirs(result_path, exist_ok=True)
+            full_file_path = os.path.join(result_path, filename)
+            with open(full_file_path, "wb") as f:
+                f.write(content)
 
-    # Second upload with same name
-    response2 = client.post(f"/experiments/{exp.id}/results",
-                            files={"file": (filename, io.BytesIO(content), "text/csv")}, )
-    assert response2.status_code == 400
-    assert "File with this name has already been uploaded for this experiment" in response2.json()["detail"]
+            db_result = ExperimentResult(
+                filename=filename,
+                path=full_file_path,
+                experiment_id=exp.id
+            )
+            db.add(db_result)
+
+        await db.commit()
+
+        zip_response = await async_client.get(f"/experiments/{exp.id}/results")
+        assert zip_response.status_code == HTTP_200_OK
+        assert zip_response.headers["content-type"] == "application/zip"
+
+        with zipfile.ZipFile(io.BytesIO(zip_response.content)) as z:
+            names_in_zip = z.namelist()
+            assert set(names_in_zip) == set(uploaded_filenames)
+
+            for name in names_in_zip:
+                with z.open(name) as f:
+                    content = f.read().decode()
+                    assert "content of file" in content
+
+    async def test_upload_duplicate_filename(self, async_client: AsyncClient, db, create_experiment):
+        experiment = await create_experiment()
+        filename = "duplicate.txt"
+        content = b"test data"
+
+        res1 = await async_client.post(
+            f"/experiments/{experiment.id}/results",
+            files={"file": (filename, io.BytesIO(content), "text/plain")}
+        )
+        assert res1.status_code == HTTP_200_OK
+
+        res2 = await async_client.post(
+            f"/experiments/{experiment.id}/results",
+            files={"file": (filename, io.BytesIO(content), "text/plain")}
+        )
+        assert res2.status_code == HTTP_400_BAD_REQUEST
+        assert "already been uploaded" in res2.json()["detail"]
+
+    async def test_get_results_not_found(self, async_client: AsyncClient, db):
+        exp = ExperimentTable(
+            experiment_name="NoResults",
+            description="No files here",
+            owner_id=1,
+            status=ExperimentStatus.COMPLETE,
+            created_at=datetime.now().isoformat()
+        )
+        db.add(exp)
+        await db.commit()
+        await db.refresh(exp)
+
+        response = await async_client.get(f"/experiments/{exp.id}/results")
+        assert response.status_code == HTTP_404_NOT_FOUND
+        assert response.json()["detail"] == "No result files found for experiment"
