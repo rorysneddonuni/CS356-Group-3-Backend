@@ -1,109 +1,38 @@
-from fastapi.testclient import TestClient
+import pytest
+from httpx import AsyncClient
 
+@pytest.mark.asyncio
+class TestEncodersRoutes:
 
-from pydantic import Field, StrictInt  # noqa: F401
-from typing import Any, List, Optional  # noqa: F401
-from typing_extensions import Annotated  # noqa: F401
-from app.models.encoder import Encoder  # noqa: F401
-from app.models.encoder_input import EncoderInput  # noqa: F401
-from app.models.error import Error  # noqa: F401
+    async def test_create_encoder_success(self, async_client: AsyncClient, test_encoder_json):
+        response = await async_client.post("/infrastructure/encoders", json=test_encoder_json)
+        assert response.status_code == 200
+        assert response.json()["message"] == "Encoder created successfully"
 
+    async def test_get_encoder_by_id(self, async_client: AsyncClient, encoder_factory, test_encoder_json):
+        encoder_id = await encoder_factory(test_encoder_json)
+        response = await async_client.get(f"/infrastructure/encoders/{encoder_id}")
+        assert response.status_code == 200
+        assert response.json()["name"] == test_encoder_json["name"]
 
-def test_create_encoder(client: TestClient):
-    """Test case for create_encoder
+    async def test_update_encoder(self, async_client: AsyncClient, encoder_factory, test_encoder_json):
+        encoder_id = await encoder_factory(test_encoder_json)
 
-    Create encoder
-    """
-    encoder_input = {"name":"name","encoder_code":"encoderCode","layers":["",""],"id":0,"encoder_type":"encoderType"}
+        updated_data = test_encoder_json.copy()
+        updated_data["description"] = "Updated encoder comment"
+        updated_data["maxLayers"] = 2
 
-    headers = {
-    }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "POST",
-    #    "/infrastructure/encoders",
-    #    headers=headers,
-    #    json=encoder_input,
-    #)
+        response = await async_client.put(f"/infrastructure/encoders/{encoder_id}", json=updated_data)
+        assert response.status_code == 200
+        assert "updated successfully" in response.json()["message"]
 
-    # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+    async def test_delete_encoder(self, async_client: AsyncClient, encoder_factory, test_encoder_json):
+        encoder_id = await encoder_factory(test_encoder_json)
+        response = await async_client.delete(f"/infrastructure/encoders/{encoder_id}")
+        assert response.status_code == 200
+        assert response.json()["message"] == "Encoder deleted"
 
-
-def test_delete_encoder(client: TestClient):
-    """Test case for delete_encoder
-
-    Delete encoder
-    """
-
-    headers = {
-    }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "DELETE",
-    #    "/infrastructure/encoders/{id}".format(id=56),
-    #    headers=headers,
-    #)
-
-    # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
-
-
-def test_get_encoder(client: TestClient):
-    """Test case for get_encoder
-
-    Retrieve encoder
-    """
-
-    headers = {
-    }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "GET",
-    #    "/infrastructure/encoders/{id}".format(id=56),
-    #    headers=headers,
-    #)
-
-    # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
-
-
-def test_get_encoders(client: TestClient):
-    """Test case for get_encoders
-
-    Retrieve encoder list
-    """
-
-    headers = {
-    }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "GET",
-    #    "/infrastructure/encoders",
-    #    headers=headers,
-    #)
-
-    # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
-
-
-def test_update_encoder(client: TestClient):
-    """Test case for update_encoder
-
-    Update encoder
-    """
-    encoder_input = {"name":"name","encoder_code":"encoderCode","layers":["",""],"id":0,"encoder_type":"encoderType"}
-
-    headers = {
-    }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "PUT",
-    #    "/infrastructure/encoders/{id}".format(id=56),
-    #    headers=headers,
-    #    json=encoder_input,
-    #)
-
-    # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
-
+    async def test_get_encoders_list(self, async_client: AsyncClient):
+        response = await async_client.get("/infrastructure/encoders")
+        assert response.status_code == 200
+        assert isinstance(response.json(), list)

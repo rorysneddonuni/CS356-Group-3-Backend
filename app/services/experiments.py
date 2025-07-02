@@ -50,7 +50,7 @@ class ExperimentsService:
         return Experiment.model_validate(await self.get_experiment(experiment.id, db))
 
     async def delete_experiment(self, experiment_id: Annotated[
-        StrictStr, Field(description="ID to uniquely identify an experiment.")], user_id: str, db: AsyncSession) -> JSONResponse:
+        StrictStr, Field(description="ID to uniquely identify an experiment.")], user_id: int, db: AsyncSession) -> JSONResponse:
         db_experiment = await self._get_experiment_for_update(experiment_id, user_id, db)
 
         await db.delete(db_experiment)

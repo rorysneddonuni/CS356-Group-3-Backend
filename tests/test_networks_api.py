@@ -1,87 +1,60 @@
-from fastapi.testclient import TestClient
+import pytest
+from httpx import AsyncClient
 
 
-from pydantic import Field, StrictStr  # noqa: F401
-from typing import Any, List, Optional  # noqa: F401
-from typing_extensions import Annotated  # noqa: F401
-from app.models.error import Error  # noqa: F401
-from app.models.network import NetworkInput  # noqa: F401
+@pytest.mark.asyncio
+class TestNetworksRoutes:
 
+    async def test_create_network_success(self, async_client: AsyncClient, test_network_json):
+        response = await async_client.post("/infrastructure/networks", json=test_network_json)
 
-def test_create_network(client: TestClient):
-    """Test case for create_network
+        assert response.status_code == 201
+        data = response.json()
 
-    Create network
-    """
-    network_input = {"name":"name","network_type":"networkType"}
+        assert data["networkName"] == test_network_json["networkName"]
+        assert data["packetLoss"] == test_network_json["packetLoss"]
 
-    headers = {
-    }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "POST",
-    #    "/infrastructure/networks",
-    #    headers=headers,
-    #    json=network_input,
-    #)
+    async def test_get_network_by_id(self, async_client: AsyncClient, network_factory, test_network_json):
+        created = await network_factory(test_network_json)
 
-    # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+        response = await async_client.get(f"/infrastructure/networks/{created.network_profile_id}")
 
+        assert response.status_code == 200
+        data = response.json()
 
-def test_delete_network(client: TestClient):
-    """Test case for delete_network
+        assert data["networkName"] == test_network_json["networkName"]
+        assert data["delay"] == test_network_json["delay"]
 
-    Delete network
-    """
+    async def test_update_network(self, async_client: AsyncClient, network_factory, test_network_json):
+        created = await network_factory(test_network_json)
 
-    headers = {
-    }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "DELETE",
-    #    "/infrastructure/networks/{id}".format(id='id_example'),
-    #    headers=headers,
-    #)
+        updated_json = test_network_json.copy()
+        updated_json["description"] = "Updated description"
+        updated_json["delay"] = 99
 
-    # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+        response = await async_client.put(
+            f"/infrastructure/networks/{created.network_profile_id}",
+            json=updated_json
+        )
 
+        assert response.status_code == 200
+        data = response.json()
 
-def test_get_network(client: TestClient):
-    """Test case for get_network
+        assert data["description"] == "Updated description"
+        assert data["delay"] == 99
 
-    Retrieve network
-    """
+    async def test_delete_network(self, async_client: AsyncClient, network_factory, test_network_json):
+        created = await network_factory(test_network_json)
 
-    headers = {
-    }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "GET",
-    #    "/infrastructure/networks/{id}".format(id='id_example'),
-    #    headers=headers,
-    #)
+        response = await async_client.delete(f"/infrastructure/networks/{created.network_profile_id}")
 
-    # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
+        assert response.status_code == 200
+        assert "message" in response.json()
 
+    async def test_get_networks_list(self, async_client: AsyncClient):
+        response = await async_client.get("/infrastructure/networks")
 
-def test_get_networks(client: TestClient):
-    """Test case for get_networks
+        assert response.status_code == 200
+        data = response.json()
 
-    Retrieve networks list
-    """
-
-    headers = {
-    }
-    # uncomment below to make a request
-    #response = client.request(
-    #    "GET",
-    #    "/infrastructure/networks",
-    #    headers=headers,
-    #)
-
-    # uncomment below to assert the status code of the HTTP response
-    #assert response.status_code == 200
-
+        assert isinstance(data, list)

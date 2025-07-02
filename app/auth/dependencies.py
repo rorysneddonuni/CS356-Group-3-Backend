@@ -53,3 +53,6 @@ def require_minimum_role(min_role: str):
             )
         return user
     return checker
+
+user_dependency = require_minimum_role("user")
+super_admin_dependency = require_minimum_role("super_admin")
