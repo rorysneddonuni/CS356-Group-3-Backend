@@ -27,7 +27,7 @@ class ExperimentSequence(ExperimentSequenceInput):
     ExperimentSequence
     """  # noqa: E501
     sequence_id: int = Field(alias="SequenceId")
-    network_topology: Optional[Network] = Field(default=None, alias="NetworkTopologyId")
+    network_topology: Optional[Network] = Field(default=None, alias="NetworkTopology")
     network_disruption_profile: Optional[Network] = Field(default=None, alias="NetworkDisruptionProfile")
 
     __properties: ClassVar[List[str]] = ["sequenceId", "networkTopologyId", "networkDisruptionProfileId",
